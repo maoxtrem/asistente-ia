@@ -1,0 +1,5 @@
+.vscode/
+vendor/
+var/
+node_modules/
+.DS_Store

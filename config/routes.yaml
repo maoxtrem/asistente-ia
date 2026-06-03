@@ -1,0 +1,7 @@
+asistente_ia_widget:
+  resource: '../src/Controller/WidgetController.php'
+  type: attribute
+
+asistente_ia_api:
+  resource: '../src/Controller/Api/ChatRequestController.php'
+  type: attribute

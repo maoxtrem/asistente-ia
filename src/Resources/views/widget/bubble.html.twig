@@ -1,0 +1,38 @@
+<div id="asistente-ia-widget" class="asistente-ia-widget" data-endpoint="/api/v1/asistente-ia/message">
+    <button
+        id="asistente-ia-toggle"
+        class="asistente-ia-toggle"
+        type="button"
+        aria-controls="asistente-ia-panel"
+        aria-expanded="false"
+    >
+        <span class="asistente-ia-toggle__icon">AI</span>
+        <span class="asistente-ia-toggle__label">Asistente IA</span>
+    </button>
+
+    <section id="asistente-ia-panel" class="asistente-ia-panel" hidden>
+        <header class="asistente-ia-panel__header">
+            <strong>Asistente IA</strong>
+            <button id="asistente-ia-close" type="button" class="asistente-ia-panel__close" aria-label="Cerrar">
+                x
+            </button>
+        </header>
+
+        <div id="asistente-ia-messages" class="asistente-ia-panel__messages">
+            <article class="asistente-ia-message asistente-ia-message--assistant">
+                <p>Hola, soy tu asistente. ¿En qué te ayudo?</p>
+            </article>
+        </div>
+
+        <form id="asistente-ia-form" class="asistente-ia-panel__form">
+            <textarea
+                id="asistente-ia-input"
+                class="asistente-ia-panel__input"
+                rows="3"
+                placeholder="Escribe tu mensaje"
+                required
+            ></textarea>
+            <button id="asistente-ia-submit" class="asistente-ia-panel__submit" type="submit">Enviar</button>
+        </form>
+    </section>
+</div>

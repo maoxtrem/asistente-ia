@@ -1,44 +1,80 @@
 .asistente-ia-widget {
     position: fixed;
-    right: 24px;
-    bottom: 24px;
+    right: 20px;
+    bottom: 28px;
     z-index: 1200;
     font-family: "Segoe UI", sans-serif;
 }
 
 .asistente-ia-toggle {
+    width: auto;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 8px;
     border: 0;
     border-radius: 999px;
-    background: #0d6efd;
-    color: #fff;
-    padding: 14px 18px;
+    background: linear-gradient(135deg, #ffe082, #ffbf00);
+    color: #2b2300;
+    padding: 8px 11px;
     cursor: pointer;
-    box-shadow: 0 12px 30px rgba(13, 110, 253, 0.28);
+    box-shadow: 0 14px 28px rgba(161, 123, 0, 0.22);
+    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.asistente-ia-toggle:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+    box-shadow: 0 22px 44px rgba(161, 123, 0, 0.34);
+}
+
+.asistente-ia-toggle:active {
+    transform: translateY(0);
 }
 
 .asistente-ia-toggle__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.18);
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.58);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    font-size: 0.75rem;
+}
+
+.asistente-ia-toggle__label {
+    font-size: 0.82rem;
     font-weight: 700;
 }
 
 .asistente-ia-panel {
-    width: min(380px, calc(100vw - 32px));
-    height: 520px;
-    margin-top: 12px;
+    width: min(520px, calc(100vw - 32px));
+    height: min(580px, calc(100vh - 130px));
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 12px);
+    display: flex;
+    flex-direction: column;
     border-radius: 20px;
     overflow: hidden;
-    background: #fff;
-    border: 1px solid #dfe7f5;
-    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.18);
+    background: rgba(13, 19, 33, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+}
+
+.asistente-ia-panel.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
 }
 
 .asistente-ia-panel__header {
@@ -46,40 +82,46 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 18px;
-    background: linear-gradient(135deg, #0d6efd, #0a58ca);
-    color: #fff;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.95), rgba(255, 165, 0, 0.92));
+    color: #2b2300;
+    border-bottom: 1px solid rgba(43, 35, 0, 0.08);
 }
 
 .asistente-ia-panel__close {
     border: 0;
     background: transparent;
     color: inherit;
-    font-size: 18px;
+    font-size: 22px;
+    line-height: 1;
     cursor: pointer;
 }
 
 .asistente-ia-panel__messages {
-    height: 370px;
+    flex: 1 1 auto;
     overflow-y: auto;
     padding: 16px;
-    background: #f6f9ff;
+    background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, rgba(16, 22, 35, 0.96), rgba(12, 17, 29, 0.98));
 }
 
 .asistente-ia-message {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .asistente-ia-message p {
     margin: 0;
     padding: 12px 14px;
-    border-radius: 16px;
+    border-radius: 18px;
     line-height: 1.4;
+    max-width: 86%;
+    word-break: break-word;
 }
 
 .asistente-ia-message--assistant p {
-    background: #ffffff;
-    color: #0f172a;
-    border: 1px solid #dbe4f0;
+    background: rgba(255, 255, 255, 0.94);
+    color: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .asistente-ia-message--user {
@@ -88,33 +130,113 @@
 
 .asistente-ia-message--user p {
     display: inline-block;
-    background: #0d6efd;
+    background: linear-gradient(135deg, #ffd54a, #ffbf00);
     color: #fff;
+    color: #2b2300;
+    box-shadow: 0 10px 20px rgba(255, 191, 0, 0.18);
+}
+
+.asistente-ia-message--typing p {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 56px;
+    padding: 14px 16px;
+}
+
+.asistente-ia-message--typing span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #64748b;
+    animation: asistente-ia-pulse 1s infinite ease-in-out;
+}
+
+.asistente-ia-message--typing span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.asistente-ia-message--typing span:nth-child(3) {
+    animation-delay: 0.3s;
 }
 
 .asistente-ia-panel__form {
     display: grid;
     gap: 12px;
     padding: 16px;
-    border-top: 1px solid #e5edf8;
-    background: #fff;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(13, 19, 33, 0.98);
 }
 
 .asistente-ia-panel__input {
     width: 100%;
     resize: none;
-    border: 1px solid #c9d6ea;
-    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
     padding: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    color: #111827;
     outline: none;
+    min-height: 90px;
 }
 
 .asistente-ia-panel__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
     justify-self: end;
     border: 0;
-    border-radius: 12px;
-    padding: 10px 16px;
-    background: #0d6efd;
-    color: #fff;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffd54a, #ffbf00);
+    color: #2b2300;
+    font-weight: 700;
     cursor: pointer;
+    transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+    box-shadow: 0 14px 26px rgba(255, 191, 0, 0.22);
+}
+
+.asistente-ia-panel__submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.asistente-ia-panel__submit-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    display: block;
+    margin-left: 2px;
+}
+
+.asistente-ia-panel__submit:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.asistente-ia-widget.is-sending .asistente-ia-toggle {
+    filter: saturate(0.95);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@keyframes asistente-ia-pulse {
+    0%, 80%, 100% {
+        transform: scale(0.7);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }

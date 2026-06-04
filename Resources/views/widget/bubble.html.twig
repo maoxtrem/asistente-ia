@@ -10,7 +10,7 @@
         <span class="asistente-ia-toggle__label">Asistente IA</span>
     </button>
 
-    <section id="asistente-ia-panel" class="asistente-ia-panel" hidden>
+    <section id="asistente-ia-panel" class="asistente-ia-panel" aria-hidden="true">
         <header class="asistente-ia-panel__header">
             <strong>Asistente IA</strong>
             <button id="asistente-ia-close" type="button" class="asistente-ia-panel__close" aria-label="Cerrar">
@@ -32,7 +32,11 @@
                 placeholder="Escribe tu mensaje"
                 required
             ></textarea>
-            <button id="asistente-ia-submit" class="asistente-ia-panel__submit" type="submit">Enviar</button>
+            <button id="asistente-ia-submit" class="asistente-ia-panel__submit" type="submit" aria-label="Enviar mensaje" title="Enviar mensaje">
+                <svg class="asistente-ia-panel__submit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M3.4 20.6 21 12 3.4 3.4 3 10l10 2-10 2z"></path>
+                </svg>
+            </button>
         </form>
     </section>
 </div>

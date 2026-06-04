@@ -9,9 +9,9 @@ Bundle Symfony liviano para mostrar una burbuja de chat IA y delegar la conversa
 - `src/Controller/WidgetController.php`: render del widget
 - `src/Controller/Api/ChatRequestController.php`: endpoint local para el frontend
 - `src/Service/ExternalAssistantClient.php`: cliente HTTP hacia el microservicio
-- `src/Resources/views/widget/bubble.html.twig`: UI base del chat
-- `src/Resources/public/js/ai-chat-widget.js`: interaccion del widget
-- `src/Resources/public/css/ai-chat-widget.css`: estilos del widget
+- `Resources/views/widget/bubble.html.twig`: UI base del chat
+- `Resources/public/js/ai-chat-widget.js`: interaccion del widget
+- `Resources/public/css/ai-chat-widget.css`: estilos del widget
 
 ## Configuracion sugerida en el proyecto host
 
@@ -29,8 +29,8 @@ asistente_ia:
 ## Integracion en el host
 
 1. Registrar el bundle en `config/bundles.php`
-2. Importar `@AsistenteIa/config/routes.yaml`
-3. Exponer Twig path si quieres renderizar `@AsistenteIa/...`
+2. Importar `@AsistenteIaBundle/config/routes.yaml`
+3. Renderizar `@AsistenteIa/...` desde Twig
 4. Publicar o copiar los assets del widget
 5. Incluir la vista:
 

@@ -2,6 +2,7 @@
     const widget = document.getElementById('asistente-ia-widget');
 
     if (!widget) {
+        console.warn('[AsistenteIA] Widget no encontrado en la pagina');
         return;
     }
 
@@ -11,8 +12,10 @@
     const closeButton = document.getElementById('asistente-ia-close');
     const form = document.getElementById('asistente-ia-form');
     const input = document.getElementById('asistente-ia-input');
+    const submitButton = document.getElementById('asistente-ia-submit');
     const messages = document.getElementById('asistente-ia-messages');
     let conversationId = null;
+    let typingIndicator = null;
 
     const appendMessage = (role, text) => {
         const item = document.createElement('article');
@@ -26,16 +29,70 @@
         messages.scrollTop = messages.scrollHeight;
     };
 
-    const setPanelVisibility = (isOpen) => {
-        panel.hidden = !isOpen;
-        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    const setSendingState = (isSending) => {
+        input.disabled = isSending;
+        submitButton.disabled = isSending;
+        submitButton.setAttribute('aria-label', isSending ? 'Enviando mensaje' : 'Enviar mensaje');
+        submitButton.setAttribute('title', isSending ? 'Enviando...' : 'Enviar mensaje');
+        widget.classList.toggle('is-sending', isSending);
     };
 
+    const showTypingIndicator = () => {
+        if (typingIndicator) {
+            return;
+        }
+
+        typingIndicator = document.createElement('article');
+        typingIndicator.className = 'asistente-ia-message asistente-ia-message--assistant asistente-ia-message--typing';
+        typingIndicator.innerHTML = '<p><span></span><span></span><span></span></p>';
+        messages.appendChild(typingIndicator);
+        messages.scrollTop = messages.scrollHeight;
+    };
+
+    const hideTypingIndicator = () => {
+        if (!typingIndicator) {
+            return;
+        }
+
+        typingIndicator.remove();
+        typingIndicator = null;
+    };
+
+    const setPanelVisibility = (isOpen) => {
+        console.log('[AsistenteIA] setPanelVisibility', { isOpen });
+        panel.classList.toggle('is-open', isOpen);
+        panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (isOpen) {
+            input.focus();
+        }
+    };
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' || event.shiftKey) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (form.requestSubmit) {
+            form.requestSubmit();
+            return;
+        }
+
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    });
+
     toggle.addEventListener('click', () => {
-        setPanelVisibility(panel.hidden);
+        console.log('[AsistenteIA] click toggle', {
+            isOpen: panel.classList.contains('is-open'),
+            ariaExpanded: toggle.getAttribute('aria-expanded')
+        });
+        setPanelVisibility(!panel.classList.contains('is-open'));
     });
 
     closeButton.addEventListener('click', () => {
+        console.log('[AsistenteIA] click close');
         setPanelVisibility(false);
     });
 
@@ -49,9 +106,11 @@
 
         appendMessage('user', message);
         input.value = '';
-        input.disabled = true;
+        setSendingState(true);
+        showTypingIndicator();
 
         try {
+            console.log('[AsistenteIA] submit message', { endpoint, message, conversationId });
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -67,7 +126,14 @@
                 })
             });
 
-            const payload = await response.json();
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || !payload?.ok) {
+                const errorMessage = payload?.error?.message || payload?.message || 'No fue posible consultar el asistente.';
+                appendMessage('assistant', errorMessage);
+                return;
+            }
+
             const reply = payload?.data?.message || payload?.message || 'No hubo respuesta del asistente.';
 
             if (payload?.data?.conversation_id) {
@@ -76,9 +142,11 @@
 
             appendMessage('assistant', reply);
         } catch (error) {
+            console.error('[AsistenteIA] error al consultar el asistente', error);
             appendMessage('assistant', 'Ocurrio un error al consultar el asistente.');
         } finally {
-            input.disabled = false;
+            hideTypingIndicator();
+            setSendingState(false);
             input.focus();
         }
     });

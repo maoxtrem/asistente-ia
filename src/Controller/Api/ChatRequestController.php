@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace Maoxtrem\AsistenteIa\Controller\Api;
 
 use Maoxtrem\AsistenteIa\DTO\ChatRequest;
+use Maoxtrem\AsistenteIa\Service\ExternalAssistantClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class ChatRequestController
 {
+    public function __construct(
+        private readonly ExternalAssistantClient $assistantClient,
+        private readonly string $tenantName,
+    ) {
+    }
+
     #[Route('/api/v1/asistente-ia/message', name: 'asistente_ia_message', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
     {
@@ -26,6 +33,7 @@ final class ChatRequestController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+        $payload['tenant'] = trim((string) ($payload['tenant'] ?? $this->tenantName));
         $chatRequest = ChatRequest::fromArray($payload);
 
         if ($chatRequest->message === '') {
@@ -38,21 +46,18 @@ final class ChatRequestController
             ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $conversationId = $chatRequest->conversationId ?? 'mock-' . substr(hash('sha256', $chatRequest->message . '|' . (string) $request->getClientIp()), 0, 12);
-        $reply = sprintf(
-            'He recibido tu mensaje: "%s". En este momento estoy en modo de prueba y respondo como si el microservicio estuviera conectado.',
-            $chatRequest->message
-        );
+        $response = $this->assistantClient->sendMessage($chatRequest);
+        $payload = $response->toArray();
+        $rawPayload = is_array($payload['raw'] ?? null) ? $payload['raw'] : [];
+        $links = $rawPayload['data']['links'] ?? $rawPayload['links'] ?? [];
 
         return new JsonResponse([
             'ok' => true,
             'data' => [
-                'message' => $reply,
-                'conversation_id' => $conversationId,
-                'raw' => [
-                    'mocked' => true,
-                    'source' => 'asistente-ia-bundle',
-                ],
+                'message' => $payload['message'],
+                'conversation_id' => $payload['conversation_id'],
+                'links' => is_array($links) ? $links : [],
+                'raw' => $rawPayload,
             ],
         ]);
     }

@@ -9,6 +9,7 @@ final class ChatRequest
     public function __construct(
         public readonly string $message,
         public readonly ?string $conversationId,
+        public readonly string $tenant,
         public readonly array $context,
         public readonly array $metadata,
     ) {
@@ -19,6 +20,7 @@ final class ChatRequest
         return new self(
             message: trim((string) ($payload['message'] ?? '')),
             conversationId: self::nullableString($payload['conversation_id'] ?? null),
+            tenant: trim((string) ($payload['tenant'] ?? '')),
             context: is_array($payload['context'] ?? null) ? $payload['context'] : [],
             metadata: is_array($payload['metadata'] ?? null) ? $payload['metadata'] : [],
         );
@@ -29,6 +31,7 @@ final class ChatRequest
         return [
             'message' => $this->message,
             'conversation_id' => $this->conversationId,
+            'tenant' => $this->tenant,
             'context' => $this->context,
             'metadata' => $this->metadata,
         ];

@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Maoxtrem\AsistenteIa\Service;
 
-use Maoxtrem\AsistenteIa\DTO\ChatRequest;
-use Maoxtrem\AsistenteIa\DTO\ChatResponse;
+use Maoxtrem\AsistenteIa\Contract\IndexableDocumentInterface;
+use Maoxtrem\AsistenteIa\DTO\IndexDocument;
+use Maoxtrem\AsistenteIa\DTO\IndexDocumentResponse;
 use Throwable;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-final class ExternalAssistantClient
+final class ExternalIndexClient
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly string $baseUrl,
-        private readonly string $chatEndpoint,
+        private readonly string $indexEndpoint,
         private readonly string $apiKey,
         private readonly float $connectTimeout,
         private readonly float $timeout,
@@ -24,12 +25,17 @@ final class ExternalAssistantClient
     ) {
     }
 
-    public function sendMessage(ChatRequest $chatRequest): ChatResponse
+    public function indexIndexable(IndexableDocumentInterface $document): IndexDocumentResponse
+    {
+        return $this->index(IndexDocument::fromIndexable($document));
+    }
+
+    public function index(IndexDocument $document): IndexDocumentResponse
     {
         try {
             $response = $this->httpClient->request('POST', $this->buildUrl(), [
                 'headers' => $this->buildHeaders(),
-                'json' => $chatRequest->toArray(),
+                'json' => $document->toArray(),
                 'max_connect_duration' => $this->connectTimeout,
                 'timeout' => $this->timeout,
                 'verify_peer' => $this->verifyPeer,
@@ -38,25 +44,29 @@ final class ExternalAssistantClient
 
             $payload = $response->toArray(false);
         } catch (Throwable $exception) {
-            return new ChatResponse(
-                message: 'No fue posible conectar con el microservicio del asistente.',
+            return new IndexDocumentResponse(
+                ok: false,
+                message: 'No fue posible conectar con el microservicio de indexacion.',
                 raw: ['error' => $exception->getMessage()],
             );
         }
 
         $message = trim((string) ($payload['data']['message'] ?? $payload['message'] ?? ''));
-        $conversationId = $payload['data']['conversation_id'] ?? $payload['conversation_id'] ?? null;
+        $collection = $payload['data']['collection'] ?? $payload['collection'] ?? null;
+        $pointId = $payload['data']['point_id'] ?? $payload['point_id'] ?? null;
 
-        return new ChatResponse(
-            message: $message !== '' ? $message : 'El microservicio no devolvio un mensaje.',
-            conversationId: is_string($conversationId) && trim($conversationId) !== '' ? $conversationId : null,
+        return new IndexDocumentResponse(
+            ok: true,
+            message: $message !== '' ? $message : 'El microservicio no devolvio un mensaje de indexacion.',
+            collection: is_string($collection) && trim($collection) !== '' ? $collection : null,
+            pointId: is_string($pointId) && trim($pointId) !== '' ? $pointId : null,
             raw: is_array($payload) ? $payload : [],
         );
     }
 
     private function buildUrl(): string
     {
-        return rtrim($this->baseUrl, '/') . '/' . ltrim($this->chatEndpoint, '/');
+        return rtrim($this->baseUrl, '/') . '/' . ltrim($this->indexEndpoint, '/');
     }
 
     private function buildHeaders(): array

@@ -17,13 +17,40 @@
     let conversationId = null;
     let typingIndicator = null;
 
-    const appendMessage = (role, text) => {
+    const isSafeInternalRoute = (href) => {
+        return typeof href === 'string' && /^(\/(?!\/)|#)/.test(href);
+    };
+
+    const appendMessage = (role, text, links = []) => {
         const item = document.createElement('article');
         item.className = 'asistente-ia-message asistente-ia-message--' + role;
 
         const paragraph = document.createElement('p');
         paragraph.textContent = text;
         item.appendChild(paragraph);
+
+        if (Array.isArray(links) && links.length > 0) {
+            const list = document.createElement('div');
+            list.className = 'asistente-ia-message__links';
+
+            for (const link of links) {
+                if (!link || typeof link !== 'object' || !isSafeInternalRoute(link.href)) {
+                    continue;
+                }
+
+                const anchor = document.createElement('a');
+                anchor.className = 'asistente-ia-message__link';
+                anchor.href = link.href;
+                anchor.textContent = link.label || link.href;
+                anchor.target = '_self';
+                anchor.rel = 'noopener';
+                list.appendChild(anchor);
+            }
+
+            if (list.childElementCount > 0) {
+                item.appendChild(list);
+            }
+        }
 
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight;
@@ -135,12 +162,13 @@
             }
 
             const reply = payload?.data?.message || payload?.message || 'No hubo respuesta del asistente.';
+            const links = Array.isArray(payload?.data?.links) ? payload.data.links : [];
 
             if (payload?.data?.conversation_id) {
                 conversationId = payload.data.conversation_id;
             }
 
-            appendMessage('assistant', reply);
+            appendMessage('assistant', reply, links);
         } catch (error) {
             console.error('[AsistenteIA] error al consultar el asistente', error);
             appendMessage('assistant', 'Ocurrio un error al consultar el asistente.');

@@ -124,6 +124,31 @@
     border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
+.asistente-ia-message__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.asistente-ia-message__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    transition: transform 160ms ease, background 160ms ease;
+}
+
+.asistente-ia-message__link:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.18);
+}
+
 .asistente-ia-message--user {
     text-align: right;
 }

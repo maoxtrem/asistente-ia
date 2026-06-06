@@ -7,7 +7,9 @@ services:
     resource: '../src/'
     exclude:
       - '../src/DependencyInjection/'
+      - '../src/Contract/'
       - '../src/DTO/'
+      - '../src/Event/'
 
   Maoxtrem\AsistenteIa\Controller\:
     resource: '../src/Controller/'
@@ -20,4 +22,21 @@ services:
       $apiKey: '%asistente_ia.api_key%'
       $connectTimeout: '%asistente_ia.connect_timeout%'
       $timeout: '%asistente_ia.timeout%'
+      $verifyPeer: '%asistente_ia.verify_peer%'
+      $verifyHost: '%asistente_ia.verify_host%'
       $defaultHeaders: '%asistente_ia.default_headers%'
+
+  Maoxtrem\AsistenteIa\Service\ExternalIndexClient:
+    arguments:
+      $baseUrl: '%asistente_ia.base_url%'
+      $indexEndpoint: '%asistente_ia.index_endpoint%'
+      $apiKey: '%asistente_ia.api_key%'
+      $connectTimeout: '%asistente_ia.connect_timeout%'
+      $timeout: '%asistente_ia.timeout%'
+      $verifyPeer: '%asistente_ia.verify_peer%'
+      $verifyHost: '%asistente_ia.verify_host%'
+      $defaultHeaders: '%asistente_ia.default_headers%'
+
+  Maoxtrem\AsistenteIa\Controller\Api\ChatRequestController:
+    arguments:
+      $tenantName: '%asistente_ia.tenant_name%'

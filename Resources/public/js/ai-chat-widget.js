@@ -7,6 +7,7 @@
     }
 
     const endpoint = widget.dataset.endpoint || '/api/v1/asistente-ia/message';
+    const locale = normalizeLocale(window.locale || widget.dataset.locale || document.documentElement.lang || navigator.language || '');
     const toggle = document.getElementById('asistente-ia-toggle');
     const panel = document.getElementById('asistente-ia-panel');
     const closeButton = document.getElementById('asistente-ia-close');
@@ -147,6 +148,7 @@
                 body: JSON.stringify({
                     message,
                     conversation_id: conversationId,
+                    locale,
                     context: {
                         pathname: window.location.pathname
                     }
@@ -179,3 +181,13 @@
         }
     });
 })();
+
+function normalizeLocale(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (!normalized) {
+        return '';
+    }
+
+    const compact = normalized.replace('_', '-');
+    return compact;
+}

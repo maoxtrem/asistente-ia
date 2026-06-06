@@ -10,6 +10,7 @@ final class ChatRequest
         public readonly string $message,
         public readonly ?string $conversationId,
         public readonly string $tenant,
+        public readonly string $locale,
         public readonly array $context,
         public readonly array $metadata,
     ) {
@@ -21,6 +22,7 @@ final class ChatRequest
             message: trim((string) ($payload['message'] ?? '')),
             conversationId: self::nullableString($payload['conversation_id'] ?? null),
             tenant: trim((string) ($payload['tenant'] ?? '')),
+            locale: self::normalizeLocale($payload['locale'] ?? null),
             context: is_array($payload['context'] ?? null) ? $payload['context'] : [],
             metadata: is_array($payload['metadata'] ?? null) ? $payload['metadata'] : [],
         );
@@ -32,6 +34,7 @@ final class ChatRequest
             'message' => $this->message,
             'conversation_id' => $this->conversationId,
             'tenant' => $this->tenant,
+            'locale' => $this->locale,
             'context' => $this->context,
             'metadata' => $this->metadata,
         ];
@@ -42,5 +45,12 @@ final class ChatRequest
         $normalized = trim((string) ($value ?? ''));
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    private static function normalizeLocale(mixed $value): string
+    {
+        $normalized = strtolower(trim((string) ($value ?? '')));
+
+        return str_replace('_', '-', $normalized);
     }
 }

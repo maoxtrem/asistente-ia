@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale|default('en')|lower }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente IA - Vectorial</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0d1320;
+            --panel: #111a2b;
+            --panel-2: #162238;
+            --border: rgba(255,255,255,.08);
+            --text: #e6eefc;
+            --muted: #9fb0d0;
+            --accent: #f0ab00;
+            --accent-2: #ffca3a;
+            --danger: #ef4444;
+            --success: #16a34a;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(240,171,0,.16), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(59,130,246,.16), transparent 26%),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        }
+        .shell {
+            width: min(1100px, calc(100vw - 32px));
+            margin: 24px auto;
+        }
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(17,26,43,.98), rgba(11,18,30,.98));
+            box-shadow: 0 20px 60px rgba(0,0,0,.35);
+            overflow: hidden;
+        }
+        .card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, rgba(240,171,0,.95), rgba(255,202,58,.92));
+            color: #111827;
+        }
+        .card__header h1 {
+            margin: 0;
+            font-size: 1.15rem;
+            line-height: 1.2;
+        }
+        .card__header p {
+            margin: 4px 0 0;
+            font-size: .92rem;
+            opacity: .82;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn--ghost {
+            border-color: rgba(17,24,39,.16);
+            background: rgba(255,255,255,.2);
+            color: #111827;
+        }
+        .btn--primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #111827;
+        }
+        .card__body {
+            padding: 20px;
+        }
+        .notice {
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.03);
+        }
+        .notice--error {
+            border-color: rgba(239,68,68,.3);
+            background: rgba(239,68,68,.08);
+        }
+        .notice--success {
+            border-color: rgba(22,163,74,.3);
+            background: rgba(22,163,74,.08);
+        }
+        .notice--warning {
+            border-color: rgba(240,171,0,.3);
+            background: rgba(240,171,0,.08);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .field { grid-column: span 12; }
+        .field--3 { grid-column: span 3; }
+        .field--4 { grid-column: span 4; }
+        .field--6 { grid-column: span 6; }
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .field input,
+        .field textarea,
+        .field select {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.04);
+            color: var(--text);
+            padding: 12px 14px;
+            outline: none;
+        }
+        .field textarea { min-height: 140px; resize: vertical; }
+        .field small {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+        }
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .muted {
+            color: var(--muted);
+        }
+        .result-code {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.05);
+            color: var(--muted);
+            font-size: .85rem;
+        }
+        code {
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            padding: .15rem .35rem;
+            border-radius: 8px;
+        }
+        @media (max-width: 920px) {
+            .field--3, .field--4, .field--6 { grid-column: span 12; }
+            .card__header { flex-direction: column; align-items: flex-start; }
+            .actions { justify-content: stretch; }
+            .actions .btn { flex: 1; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <div class="card">
+            <div class="card__header">
+                <div>
+                    <h1>Vectorial personalizado</h1>
+                    <p>Envía texto de entrenamiento, documentación o ejemplos al microservicio para guardarlo en Qdrant.</p>
+                </div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <a href="{{ path('asistente_ia_widget') }}" class="btn btn--ghost">Abrir chat</a>
+                    <a href="{{ path('asistente_ia_widget') }}" class="btn btn--ghost">Volver</a>
+                </div>
+            </div>
+            <div class="card__body">
+                {% if errors is not empty %}
+                    <div class="notice notice--error">
+                        <strong>Revisa estos campos:</strong>
+                        <ul style="margin: 10px 0 0 20px;">
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% if result is not null %}
+                    <div class="notice {{ result.ok ? 'notice--success' : 'notice--warning' }}">
+                        <strong>{{ result.ok ? 'Listo' : 'Aviso' }}</strong>
+                        <div style="margin-top:8px;">{{ result.message }}</div>
+                        {% if result.collection is not null %}
+                            <div class="result-code">Colección: <code>{{ result.collection }}</code></div>
+                        {% endif %}
+                        {% if result.pointId is not null %}
+                            <div class="result-code">Vector ID: <code>{{ result.pointId }}</code></div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    <div class="grid">
+                        <div class="field field--4">
+                            <label for="id">ID</label>
+                            <input id="id" name="id" value="{{ data.id }}" placeholder="cliente-123">
+                            <small>Opcional para upsert. Obligatorio para delete.</small>
+                        </div>
+                        <div class="field field--4">
+                            <label for="type">Tipo</label>
+                            <input id="type" name="type" value="{{ data.type }}" placeholder="language-guide" required>
+                        </div>
+                        <div class="field field--4">
+                            <label for="source">Origen</label>
+                            <input id="source" name="source" value="{{ data.source }}" placeholder="manual" required>
+                        </div>
+
+                        <div class="field field--4">
+                            <label for="tenant">Tenant</label>
+                            <input id="tenant" name="tenant" value="{{ data.tenant }}" placeholder="projects" required>
+                        </div>
+                        <div class="field field--4">
+                            <label for="operation">Operación</label>
+                            <select id="operation" name="operation">
+                                <option value="upsert" {{ data.operation == 'upsert' ? 'selected' : '' }}>Upsert</option>
+                                <option value="delete" {{ data.operation == 'delete' ? 'selected' : '' }}>Delete</option>
+                            </select>
+                        </div>
+                        <div class="field field--4">
+                            <label for="metadata_json">Metadata JSON</label>
+                            <textarea id="metadata_json" name="metadata_json" rows="5">{{ data.metadata_json }}</textarea>
+                            <small>Ejemplos: idioma, route, categoria, tags, o cualquier dato extra útil para búsqueda.</small>
+                        </div>
+
+                        <div class="field">
+                            <label for="title">Título</label>
+                            <input id="title" name="title" value="{{ data.title }}" placeholder="How to change language" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="content">Contenido</label>
+                            <textarea id="content" name="content" rows="10" placeholder="Explain the steps..." required>{{ data.content }}</textarea>
+                            <small>Puedes pegar aquí una guía, una FAQ o un ejemplo de conversación. El microservicio lo convertirá en vector.</small>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <a href="{{ path('asistente_ia_widget') }}" class="btn btn--ghost">Cancelar</a>
+                        <button type="submit" class="btn btn--primary">Enviar a vectorial</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -8,6 +8,7 @@ Bundle Symfony liviano para mostrar una burbuja de chat IA y delegar la conversa
 - `config/services.yaml`: registro de servicios
 - `src/Controller/WidgetController.php`: render del widget
 - `src/Controller/Api/ChatRequestController.php`: endpoint local para el frontend
+- `src/Controller/IndexDocumentController.php`: formulario reusable para indexar documentos personalizados
 - `src/Service/ExternalAssistantClient.php`: cliente HTTP hacia el microservicio
 - `src/Contract/IndexableDocumentInterface.php`: contrato reusable para documentos indexables
 - `src/Event/IndexDocumentEvent.php`: evento genérico para disparar indexacion desde cualquier proyecto
@@ -56,3 +57,13 @@ Si prefieres un flujo por eventos, puedes despachar `Maoxtrem\AsistenteIa\Event\
 ```twig
 {{ render(path('asistente_ia_widget')) }}
 ```
+
+## Formulario de indexacion manual
+
+El bundle incluye una ruta para cargar documentos vectoriales personalizados desde el navegador:
+
+```twig
+{{ path('asistente_ia_vector_form') }}
+```
+
+Sirve para crear ejemplos como guias de cambio de idioma, FAQs o instrucciones operativas sin tocar codigo del proyecto host.

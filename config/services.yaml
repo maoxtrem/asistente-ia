@@ -40,3 +40,7 @@ services:
   Maoxtrem\AsistenteIa\Controller\Api\ChatRequestController:
     arguments:
       $tenantName: '%asistente_ia.tenant_name%'
+
+  Maoxtrem\AsistenteIa\Controller\IndexDocumentController:
+    arguments:
+      $tenantName: '%asistente_ia.tenant_name%'

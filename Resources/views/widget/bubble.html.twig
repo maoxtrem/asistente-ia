@@ -1,4 +1,5 @@
-<div id="asistente-ia-widget" class="asistente-ia-widget" data-endpoint="/api/v1/asistente-ia/message">
+{% set asistenteIaLocale = (app.session is not null ? app.session.get('_locale', app.request.locale|default('en')) : app.request.locale|default('en'))|lower %}
+<div id="asistente-ia-widget" class="asistente-ia-widget" data-endpoint="/api/v1/asistente-ia/message" data-locale="{{ asistenteIaLocale|e('html_attr') }}">
     <button
         id="asistente-ia-toggle"
         class="asistente-ia-toggle"
@@ -12,7 +13,10 @@
 
     <section id="asistente-ia-panel" class="asistente-ia-panel" aria-hidden="true">
         <header class="asistente-ia-panel__header">
-            <strong>Asistente IA</strong>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <strong>Asistente IA</strong>
+                <a href="{{ path('asistente_ia_vector_form') }}" style="color:inherit; text-decoration:none; font-size:.78rem; opacity:.85;">Vectorial</a>
+            </div>
             <button id="asistente-ia-close" type="button" class="asistente-ia-panel__close" aria-label="Cerrar">
                 x
             </button>

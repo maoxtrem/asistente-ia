@@ -223,15 +223,25 @@
                         </div>
 
                         <div class="field field--4">
-                            <label for="tenant">Tenant</label>
-                            <input id="tenant" name="tenant" value="{{ data.tenant }}" placeholder="projects" required>
-                        </div>
-                        <div class="field field--4">
                             <label for="operation">Operación</label>
                             <select id="operation" name="operation">
                                 <option value="upsert" {{ data.operation == 'upsert' ? 'selected' : '' }}>Upsert</option>
                                 <option value="delete" {{ data.operation == 'delete' ? 'selected' : '' }}>Delete</option>
                             </select>
+                        </div>
+                        <div class="field field--4">
+                            <label for="is_global" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                                <input
+                                    id="is_global"
+                                    name="is_global"
+                                    type="checkbox"
+                                    value="1"
+                                    {{ data.is_global ? 'checked' : '' }}
+                                    style="width:auto; transform: scale(1.08);"
+                                >
+                                Guardar como conocimiento global
+                            </label>
+                            <small>Si lo activas, el documento se guarda con tenant <code>global</code>. Si no, usa el tenant del proyecto actual.</small>
                         </div>
                         <div class="field field--4">
                             <label for="metadata_json">Metadata JSON</label>

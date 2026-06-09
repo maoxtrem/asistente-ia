@@ -62,7 +62,7 @@ final class IndexDocumentController
     }
 
     /**
-     * @return array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string }
+     * @return array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string, is_global:bool }
      */
     private function defaultFormData(): array
     {
@@ -75,31 +75,35 @@ final class IndexDocumentController
             'content' => '',
             'metadata_json' => "{\n  \"language\": \"en\",\n  \"topic\": \"language-switch\"\n}",
             'operation' => 'upsert',
+            'is_global' => false,
         ];
     }
 
     /**
      * @param array<string, mixed> $payload
-     * @return array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string }
+     * @return array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string, is_global:bool }
      */
     private function normalizeFormData(array $payload): array
     {
         $defaults = $this->defaultFormData();
+        $isGlobal = $this->normalizeCheckbox($payload['is_global'] ?? false);
+        $tenant = $isGlobal ? 'global' : $this->tenantName;
 
         return [
             'id' => trim((string) ($payload['id'] ?? $defaults['id'])),
             'type' => trim((string) ($payload['type'] ?? $defaults['type'])),
             'source' => trim((string) ($payload['source'] ?? $defaults['source'])),
-            'tenant' => trim((string) ($payload['tenant'] ?? $defaults['tenant'])),
+            'tenant' => $tenant,
             'title' => trim((string) ($payload['title'] ?? $defaults['title'])),
             'content' => trim((string) ($payload['content'] ?? $defaults['content'])),
             'metadata_json' => trim((string) ($payload['metadata_json'] ?? $defaults['metadata_json'])),
             'operation' => trim((string) ($payload['operation'] ?? $defaults['operation'])),
+            'is_global' => $isGlobal,
         ];
     }
 
     /**
-     * @param array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string } $data
+     * @param array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string, is_global:bool } $data
      * @return list<string>
      */
     private function validate(array $data): array
@@ -127,6 +131,21 @@ final class IndexDocumentController
         }
 
         return $errors;
+    }
+
+    private function normalizeCheckbox(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        $normalized = strtolower(trim((string) $value));
+
+        return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
     }
 
     /**

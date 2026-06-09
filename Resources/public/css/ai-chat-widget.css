@@ -4,6 +4,18 @@
     bottom: 28px;
     z-index: 1200;
     font-family: "Segoe UI", sans-serif;
+    --ai-accent: #ffbf00;
+    --ai-accent-soft: #ffe082;
+    --ai-panel-bg: #0d1321;
+    --ai-panel-bg-soft: #101623;
+    --ai-panel-border: rgba(255, 255, 255, 0.12);
+    --ai-text: #e6eefc;
+    --ai-text-on-accent: #2b2300;
+    --ai-assistant-bubble-bg: rgba(255, 255, 255, 0.94);
+    --ai-user-bubble-bg: var(--ai-accent);
+    --ai-input-bg: rgba(255, 255, 255, 0.96);
+    --ai-link-bg: rgba(255, 255, 255, 0.12);
+    --ai-link-text: #f8fafc;
 }
 
 .asistente-ia-toggle {
@@ -14,8 +26,8 @@
     gap: 8px;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(135deg, #ffe082, #ffbf00);
-    color: #2b2300;
+    background: linear-gradient(135deg, var(--ai-accent-soft), var(--ai-accent));
+    color: var(--ai-text-on-accent);
     padding: 8px 11px;
     cursor: pointer;
     box-shadow: 0 14px 28px rgba(161, 123, 0, 0.22);
@@ -39,7 +51,7 @@
     width: 26px;
     height: 26px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.58);
+    background: color-mix(in srgb, var(--ai-accent) 22%, white);
     font-weight: 800;
     letter-spacing: 0.02em;
     font-size: 0.75rem;
@@ -60,8 +72,8 @@
     flex-direction: column;
     border-radius: 20px;
     overflow: hidden;
-    background: rgba(13, 19, 33, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--ai-panel-bg);
+    border: 1px solid var(--ai-panel-border);
     box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
     opacity: 0;
     visibility: hidden;
@@ -82,9 +94,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 18px;
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.95), rgba(255, 165, 0, 0.92));
-    color: #2b2300;
-    border-bottom: 1px solid rgba(43, 35, 0, 0.08);
+    background: linear-gradient(135deg, var(--ai-accent-soft), var(--ai-accent));
+    color: var(--ai-text-on-accent);
+    border-bottom: 1px solid color-mix(in srgb, var(--ai-text-on-accent) 10%, transparent);
 }
 
 .asistente-ia-panel__close {
@@ -101,8 +113,8 @@
     overflow-y: auto;
     padding: 16px;
     background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 28%),
-        linear-gradient(180deg, rgba(16, 22, 35, 0.96), rgba(12, 17, 29, 0.98));
+        radial-gradient(circle at top right, color-mix(in srgb, var(--ai-accent) 10%, transparent), transparent 28%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
 }
 
 .asistente-ia-message {
@@ -119,9 +131,9 @@
 }
 
 .asistente-ia-message--assistant p {
-    background: rgba(255, 255, 255, 0.94);
+    background: #ffffff;
     color: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .asistente-ia-message__links {
@@ -138,15 +150,15 @@
     padding: 8px 12px;
     border-radius: 999px;
     text-decoration: none;
-    background: rgba(255, 255, 255, 0.12);
-    color: #f8fafc;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+    border: 1px solid rgba(15, 23, 42, 0.10);
     transition: transform 160ms ease, background 160ms ease;
 }
 
 .asistente-ia-message__link:hover {
     transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(15, 23, 42, 0.10);
 }
 
 .asistente-ia-message--user {
@@ -155,10 +167,9 @@
 
 .asistente-ia-message--user p {
     display: inline-block;
-    background: linear-gradient(135deg, #ffd54a, #ffbf00);
-    color: #fff;
-    color: #2b2300;
-    box-shadow: 0 10px 20px rgba(255, 191, 0, 0.18);
+    background: linear-gradient(135deg, var(--ai-accent-soft), var(--ai-user-bubble-bg));
+    color: var(--ai-text-on-accent);
+    box-shadow: 0 10px 20px color-mix(in srgb, var(--ai-accent) 22%, transparent);
 }
 
 .asistente-ia-message--typing p {
@@ -173,7 +184,7 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #64748b;
+    background: color-mix(in srgb, var(--ai-text) 42%, transparent);
     animation: asistente-ia-pulse 1s infinite ease-in-out;
 }
 
@@ -189,20 +200,42 @@
     display: grid;
     gap: 12px;
     padding: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(13, 19, 33, 0.98);
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    background: #ffffff;
 }
 
 .asistente-ia-panel__input {
     width: 100%;
     resize: none;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: 16px;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.96);
+    background: #ffffff;
     color: #111827;
+    caret-color: #111827;
     outline: none;
     min-height: 90px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.asistente-ia-panel__input:focus,
+.asistente-ia-panel__input:focus-visible {
+    background: #ffffff !important;
+    color: #111827 !important;
+    border-color: color-mix(in srgb, var(--ai-accent) 45%, rgba(15, 23, 42, 0.12));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ai-accent) 14%, transparent);
+}
+
+.asistente-ia-panel__input::selection {
+    background: color-mix(in srgb, var(--ai-accent) 70%, white);
+    color: #111827;
+}
+
+.asistente-ia-panel__input::-moz-selection {
+    background: color-mix(in srgb, var(--ai-accent) 70%, white);
+    color: #111827;
 }
 
 .asistente-ia-panel__submit {
@@ -214,12 +247,12 @@
     justify-self: end;
     border: 0;
     border-radius: 999px;
-    background: linear-gradient(135deg, #ffd54a, #ffbf00);
-    color: #2b2300;
+    background: linear-gradient(135deg, var(--ai-accent-soft), var(--ai-accent));
+    color: var(--ai-text-on-accent);
     font-weight: 700;
     cursor: pointer;
     transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
-    box-shadow: 0 14px 26px rgba(255, 191, 0, 0.22);
+    box-shadow: 0 14px 26px color-mix(in srgb, var(--ai-accent) 22%, transparent);
 }
 
 .asistente-ia-panel__submit:hover:not(:disabled) {

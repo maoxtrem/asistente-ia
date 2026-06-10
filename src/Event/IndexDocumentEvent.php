@@ -14,9 +14,12 @@ final class IndexDocumentEvent
     ) {
     }
 
-    public static function fromIndexable(IndexableDocumentInterface $document): self
+    /**
+     * @param array<string, mixed> $extraMetadata
+     */
+    public static function fromIndexable(IndexableDocumentInterface $document, string $operation = 'upsert', array $extraMetadata = []): self
     {
-        return new self(IndexDocument::fromIndexable($document));
+        return new self(IndexDocument::fromIndexable($document, $operation, $extraMetadata));
     }
 
     public function document(): IndexDocument

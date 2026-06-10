@@ -34,7 +34,10 @@ final class IndexDocument
         );
     }
 
-    public static function fromIndexable(IndexableDocumentInterface $document): self
+    /**
+     * @param array<string, mixed> $extraMetadata
+     */
+    public static function fromIndexable(IndexableDocumentInterface $document, string $operation = 'upsert', array $extraMetadata = []): self
     {
         return new self(
             id: $document->getIndexableId(),
@@ -43,7 +46,8 @@ final class IndexDocument
             tenant: $document->getIndexableTenant(),
             title: $document->getIndexableTitle(),
             content: $document->getIndexableContent(),
-            metadata: $document->getIndexableMetadata(),
+            metadata: array_replace($document->getIndexableMetadata(), $extraMetadata),
+            operation: self::normalizeOperation($operation),
         );
     }
 

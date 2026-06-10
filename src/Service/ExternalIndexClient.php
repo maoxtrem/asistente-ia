@@ -25,9 +25,12 @@ final class ExternalIndexClient
     ) {
     }
 
-    public function indexIndexable(IndexableDocumentInterface $document): IndexDocumentResponse
+    /**
+     * @param array<string, mixed> $extraMetadata
+     */
+    public function indexIndexable(IndexableDocumentInterface $document, string $operation = 'upsert', array $extraMetadata = []): IndexDocumentResponse
     {
-        return $this->index(IndexDocument::fromIndexable($document));
+        return $this->index(IndexDocument::fromIndexable($document, $operation, $extraMetadata));
     }
 
     public function index(IndexDocument $document): IndexDocumentResponse

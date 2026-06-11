@@ -350,9 +350,11 @@
     box-sizing: border-box !important;
     border-radius: 20px !important;
     overflow: hidden !important;
-    background: var(--ai-panel-bg) !important;
+    background: #0d1321 !important;
+    background-image: none !important;
     border: 1px solid var(--ai-panel-border) !important;
     box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
     transform: translateY(10px) scale(0.98) !important;
@@ -403,4 +405,19 @@
     font-size: 0.72rem !important;
     font-weight: 900 !important;
     letter-spacing: 0.02em !important;
+}
+
+#asistente-ia-panel .asistente-ia-panel__messages {
+    background: #f8fafc !important;
+    background-image: none !important;
+}
+
+#asistente-ia-panel .asistente-ia-message--assistant p {
+    background: #ffffff !important;
+    color: #111827 !important;
+}
+
+#asistente-ia-panel .asistente-ia-panel__input {
+    background: #ffffff !important;
+    color: #111827 !important;
 }

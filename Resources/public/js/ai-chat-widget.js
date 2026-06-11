@@ -331,15 +331,15 @@ function applyTheme(widget) {
 
     const accent = pick('--color-acento', '--brand', '--primary-accent', '--color-primario', '--primary', '--bs-primary') || '#ffbf00';
     const accentSoft = pick('--color-acento-claro', '--brand-soft', '--primary-hover', '--color-secundario', '--secondary', '--bs-secondary') || mixHex(accent, '#ffffff', 0.22);
-    const panelBg = pick('--ui-surface', '--surface', '--background-color', '--background', '--color-fondo', '--bs-body-bg') || '#0d1321';
-    const panelBgSoft = pick('--ui-surface-soft', '--surface-soft', '--background-soft', '--color-fondo-secundario', '--bs-tertiary-bg') || mixHex(panelBg, '#ffffff', 0.06);
+    const panelBg = '#0d1321';
+    const panelBgSoft = '#101623';
     const text = pick('--text-main', '--text', '--ui-text', '--body-color', '--bs-body-color') || '#e6eefc';
     const textOnAccent = pick('--text-on-primary', '--on-primary', '--primary-text', '--text-ice', '--bs-light') || '#2b2300';
-    const assistantBubbleBg = pick('--ai-assistant-bubble-bg', '--bubble-assistant', '--surface-elevated', '--card-bg') || 'rgba(255, 255, 255, 0.94)';
+    const assistantBubbleBg = '#ffffff';
     const userBubbleBg = pick('--ai-user-bubble-bg', '--bubble-user') || accent;
     const panelBorder = pick('--ai-panel-border', '--border-color', '--bs-border-color') || 'rgba(255, 255, 255, 0.12)';
-    const inputBg = pick('--ai-input-bg', '--surface', '--ui-surface', '--bs-body-bg') || 'rgba(255, 255, 255, 0.96)';
-    const messageLinkBg = pick('--ai-link-bg') || 'rgba(255, 255, 255, 0.12)';
+    const inputBg = '#ffffff';
+    const messageLinkBg = 'rgba(255, 255, 255, 0.12)';
     const messageLinkText = pick('--ai-link-text') || '#f8fafc';
 
     widget.style.setProperty('--ai-accent', accent);

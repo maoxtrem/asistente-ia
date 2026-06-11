@@ -109,6 +109,7 @@
 
     const logPanelState = (label) => {
         const panelStyles = window.getComputedStyle(panel);
+        const panelRect = panel.getBoundingClientRect();
         console.log('[AsistenteIA] panel state', {
             label,
             isOpen: panel.classList.contains('is-open'),
@@ -118,7 +119,21 @@
             opacity: panelStyles.opacity,
             pointerEvents: panelStyles.pointerEvents,
             display: panelStyles.display,
-            rect: panel.getBoundingClientRect().toJSON ? panel.getBoundingClientRect().toJSON() : null,
+            width: panelStyles.width,
+            height: panelStyles.height,
+            offsetWidth: panel.offsetWidth,
+            offsetHeight: panel.offsetHeight,
+            offsetParent: panel.offsetParent ? panel.offsetParent.id || panel.offsetParent.className || panel.offsetParent.tagName : null,
+            rect: {
+                x: panelRect.x,
+                y: panelRect.y,
+                width: panelRect.width,
+                height: panelRect.height,
+                top: panelRect.top,
+                right: panelRect.right,
+                bottom: panelRect.bottom,
+                left: panelRect.left,
+            },
         });
     };
 

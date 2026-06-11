@@ -38,6 +38,8 @@
 
     let conversationId = null;
     let typingIndicator = null;
+    let visibilitySeq = 0;
+    let lastOpenSeq = 0;
 
     const isSafeInternalRoute = (href) => {
         return typeof href === 'string' && /^(\/(?!\/)|#)/.test(href);
@@ -138,16 +140,35 @@
     };
 
     const setPanelVisibility = (isOpen, reason = 'unknown') => {
+        const seq = ++visibilitySeq;
         console.log('[AsistenteIA] setPanelVisibility', { isOpen, reason });
+        console.trace('[AsistenteIA] visibility trace', { seq, isOpen, reason });
         panel.classList.toggle('is-open', isOpen);
         panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
         if (toggle) {
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         }
         if (isOpen) {
+            lastOpenSeq = seq;
             input.focus();
         }
         logPanelState(reason);
+
+        if (isOpen) {
+            window.setTimeout(() => {
+                if (lastOpenSeq !== seq) {
+                    return;
+                }
+
+                console.log('[AsistenteIA] delayed open check', {
+                    seq,
+                    stillOpen: panel.classList.contains('is-open'),
+                    ariaHidden: panel.getAttribute('aria-hidden'),
+                    ariaExpanded: toggle ? toggle.getAttribute('aria-expanded') : null,
+                });
+                logPanelState(`delayed-open-check-${seq}`);
+            }, 250);
+        }
     };
 
     input.addEventListener('keydown', (event) => {

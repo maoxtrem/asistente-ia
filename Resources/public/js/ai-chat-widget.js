@@ -29,6 +29,13 @@
         return;
     }
 
+    console.log('[AsistenteIA] widget init', {
+        hasToggle: Boolean(toggle),
+        hasClose: Boolean(closeButton),
+        hasPanel: Boolean(panel),
+        path: window.location.pathname,
+    });
+
     let conversationId = null;
     let typingIndicator = null;
 
@@ -100,14 +107,32 @@
         typingIndicator = null;
     };
 
-    const setPanelVisibility = (isOpen) => {
-        console.log('[AsistenteIA] setPanelVisibility', { isOpen });
+    const logPanelState = (label) => {
+        const panelStyles = window.getComputedStyle(panel);
+        console.log('[AsistenteIA] panel state', {
+            label,
+            isOpen: panel.classList.contains('is-open'),
+            ariaHidden: panel.getAttribute('aria-hidden'),
+            ariaExpanded: toggle ? toggle.getAttribute('aria-expanded') : null,
+            visibility: panelStyles.visibility,
+            opacity: panelStyles.opacity,
+            pointerEvents: panelStyles.pointerEvents,
+            display: panelStyles.display,
+            rect: panel.getBoundingClientRect().toJSON ? panel.getBoundingClientRect().toJSON() : null,
+        });
+    };
+
+    const setPanelVisibility = (isOpen, reason = 'unknown') => {
+        console.log('[AsistenteIA] setPanelVisibility', { isOpen, reason });
         panel.classList.toggle('is-open', isOpen);
         panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
         if (isOpen) {
             input.focus();
         }
+        logPanelState(reason);
     };
 
     input.addEventListener('keydown', (event) => {
@@ -135,14 +160,24 @@
             const closeTrigger = event.target instanceof Element ? event.target.closest('#asistente-ia-close') : null;
             if (closeTrigger) {
                 console.log('[AsistenteIA] click close');
-                setPanelVisibility(false);
+                setPanelVisibility(false, 'click-close');
                 event.__ospAsistenteIaHandled = true;
                 event.stopPropagation();
+            } else {
+                console.log('[AsistenteIA] click ignored', {
+                    targetTag: event.target instanceof Element ? event.target.tagName : null,
+                    targetId: event.target instanceof Element ? event.target.id : null,
+                    path: window.location.pathname,
+                });
             }
             return;
         }
 
         if (event.ctrlKey || event.metaKey) {
+            console.log('[AsistenteIA] click toggle ignored by modifier', {
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+            });
             event.preventDefault();
             event.__ospAsistenteIaHandled = true;
             event.stopPropagation();
@@ -157,7 +192,7 @@
             isOpen: panel.classList.contains('is-open'),
             ariaExpanded: trigger.getAttribute('aria-expanded')
         });
-        setPanelVisibility(!panel.classList.contains('is-open'));
+        setPanelVisibility(!panel.classList.contains('is-open'), 'click-toggle');
     });
 
     document.addEventListener('dblclick', (event) => {
@@ -173,6 +208,7 @@
         event.preventDefault();
         event.__ospAsistenteIaHandled = true;
         event.stopPropagation();
+        console.log('[AsistenteIA] dblclick toggle open vector form', { vectorFormUrl });
         window.open(vectorFormUrl, '_blank', 'noopener,noreferrer');
     }, true);
 

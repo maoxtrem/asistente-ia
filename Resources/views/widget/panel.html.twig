@@ -1,0 +1,38 @@
+{% set asistenteIaLocale = (app.session is not null ? app.session.get('_locale', app.request.locale|default('en')) : app.request.locale|default('en'))|lower %}
+<div
+    id="asistente-ia-widget"
+    class="asistente-ia-widget"
+    data-endpoint="/api/v1/asistente-ia/message"
+    data-locale="{{ asistenteIaLocale|e('html_attr') }}"
+    data-vector-form-url="{{ path('asistente_ia_vector_form')|e('html_attr') }}"
+>
+    <section id="asistente-ia-panel" class="asistente-ia-panel" aria-hidden="true">
+        <header class="asistente-ia-panel__header">
+            <strong>Asistente IA</strong>
+            <button id="asistente-ia-close" type="button" class="asistente-ia-panel__close" aria-label="Cerrar">
+                x
+            </button>
+        </header>
+
+        <div id="asistente-ia-messages" class="asistente-ia-panel__messages">
+            <article class="asistente-ia-message asistente-ia-message--assistant">
+                <p>Hola, soy tu asistente. ¿En qué te ayudo?</p>
+            </article>
+        </div>
+
+        <form id="asistente-ia-form" class="asistente-ia-panel__form">
+            <textarea
+                id="asistente-ia-input"
+                class="asistente-ia-panel__input"
+                rows="3"
+                placeholder="Escribe tu mensaje"
+                required
+            ></textarea>
+            <button id="asistente-ia-submit" class="asistente-ia-panel__submit" type="submit" aria-label="Enviar mensaje" title="Enviar mensaje">
+                <svg class="asistente-ia-panel__submit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M3.4 20.6 21 12 3.4 3.4 3 10l10 2-10 2z"></path>
+                </svg>
+            </button>
+        </form>
+    </section>
+</div>

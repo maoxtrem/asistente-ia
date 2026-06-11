@@ -1,4 +1,9 @@
 (function () {
+    if (window.__ospAsistenteIaWidgetInitialized) {
+        return;
+    }
+    window.__ospAsistenteIaWidgetInitialized = true;
+
     const widget = document.getElementById('asistente-ia-widget');
 
     if (!widget) {
@@ -18,6 +23,12 @@
     const input = document.getElementById('asistente-ia-input');
     const submitButton = document.getElementById('asistente-ia-submit');
     const messages = document.getElementById('asistente-ia-messages');
+
+    if (!panel || !form || !input || !submitButton || !messages) {
+        console.warn('[AsistenteIA] Faltan nodos del widget');
+        return;
+    }
+
     let conversationId = null;
     let typingIndicator = null;
 
@@ -114,33 +125,56 @@
         form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     });
 
-    toggle.addEventListener('click', (event) => {
-        if (event.ctrlKey || event.metaKey) {
-            event.preventDefault();
+    document.addEventListener('click', (event) => {
+        if (event.__ospAsistenteIaHandled) {
             return;
         }
 
-        console.log('[AsistenteIA] click toggle', {
-            isOpen: panel.classList.contains('is-open'),
-            ariaExpanded: toggle.getAttribute('aria-expanded')
-        });
-        setPanelVisibility(!panel.classList.contains('is-open'));
-    });
+        const trigger = event.target instanceof Element ? event.target.closest('#asistente-ia-toggle') : null;
+        if (!trigger) {
+            const closeTrigger = event.target instanceof Element ? event.target.closest('#asistente-ia-close') : null;
+            if (closeTrigger) {
+                console.log('[AsistenteIA] click close');
+                setPanelVisibility(false);
+                event.__ospAsistenteIaHandled = true;
+                event.stopPropagation();
+            }
+            return;
+        }
 
-    toggle.addEventListener('dblclick', (event) => {
-        if (!vectorFormUrl || !(event.ctrlKey || event.metaKey)) {
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            event.__ospAsistenteIaHandled = true;
+            event.stopPropagation();
             return;
         }
 
         event.preventDefault();
+        event.__ospAsistenteIaHandled = true;
+        event.stopImmediatePropagation?.();
         event.stopPropagation();
-        window.open(vectorFormUrl, '_blank', 'noopener,noreferrer');
+        console.log('[AsistenteIA] click toggle', {
+            isOpen: panel.classList.contains('is-open'),
+            ariaExpanded: trigger.getAttribute('aria-expanded')
+        });
+        setPanelVisibility(!panel.classList.contains('is-open'));
     });
 
-    closeButton.addEventListener('click', () => {
-        console.log('[AsistenteIA] click close');
-        setPanelVisibility(false);
-    });
+    document.addEventListener('dblclick', (event) => {
+        if (event.__ospAsistenteIaHandled) {
+            return;
+        }
+
+        const trigger = event.target instanceof Element ? event.target.closest('#asistente-ia-toggle') : null;
+        if (!trigger || !vectorFormUrl || !(event.ctrlKey || event.metaKey)) {
+            return;
+        }
+
+        event.preventDefault();
+        event.__ospAsistenteIaHandled = true;
+        event.stopPropagation();
+        window.open(vectorFormUrl, '_blank', 'noopener,noreferrer');
+    }, true);
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();

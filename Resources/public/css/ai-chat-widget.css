@@ -339,7 +339,7 @@
     font-weight: 700 !important;
 }
 
-#asistente-ia-widget .asistente-ia-panel {
+#asistente-ia-panel {
     width: min(520px, calc(100vw - 32px)) !important;
     height: min(580px, calc(100vh - 130px)) !important;
     position: fixed !important;
@@ -359,7 +359,7 @@
     pointer-events: none !important;
 }
 
-#asistente-ia-widget .asistente-ia-panel.is-open {
+#asistente-ia-panel.is-open {
     opacity: 1 !important;
     visibility: visible !important;
     transform: translateY(0) scale(1) !important;

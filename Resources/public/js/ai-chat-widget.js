@@ -29,6 +29,14 @@
         return;
     }
 
+    if (panel.parentElement !== document.body) {
+        document.body.appendChild(panel);
+        console.log('[AsistenteIA] panel reparented', {
+            parentTag: panel.parentElement ? panel.parentElement.tagName : null,
+            parentId: panel.parentElement ? panel.parentElement.id || null : null,
+        });
+    }
+
     console.log('[AsistenteIA] widget init', {
         hasToggle: Boolean(toggle),
         hasClose: Boolean(closeButton),

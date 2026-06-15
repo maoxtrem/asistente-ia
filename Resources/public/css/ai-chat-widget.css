@@ -145,6 +145,40 @@
     margin-top: 10px;
 }
 
+.asistente-ia-message__feedback {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.asistente-ia-message__feedback-btn {
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: rgba(15, 23, 42, 0.04);
+    color: #0f172a;
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.asistente-ia-message__feedback-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: rgba(15, 23, 42, 0.08);
+}
+
+.asistente-ia-message__feedback-btn:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.asistente-ia-message__feedback-status {
+    font-size: 0.78rem;
+    color: #475569;
+}
+
 .asistente-ia-message__link {
     display: inline-flex;
     align-items: center;

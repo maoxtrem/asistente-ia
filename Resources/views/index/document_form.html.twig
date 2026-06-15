@@ -211,23 +211,12 @@
                         <div class="field field--4">
                             <label for="id">ID</label>
                             <input id="id" name="id" value="{{ data.id }}" placeholder="cliente-123">
-                            <small>Opcional para upsert. Obligatorio para delete.</small>
+                            <small>Opcional. Si lo dejas vacío, el sistema genera un ID estable a partir del contenido.</small>
                         </div>
                         <div class="field field--4">
                             <label for="type">Tipo</label>
-                            <input id="type" name="type" value="{{ data.type }}" placeholder="language-guide" required>
-                        </div>
-                        <div class="field field--4">
-                            <label for="source">Origen</label>
-                            <input id="source" name="source" value="{{ data.source }}" placeholder="manual" required>
-                        </div>
-
-                        <div class="field field--4">
-                            <label for="operation">Operación</label>
-                            <select id="operation" name="operation">
-                                <option value="upsert" {{ data.operation == 'upsert' ? 'selected' : '' }}>Upsert</option>
-                                <option value="delete" {{ data.operation == 'delete' ? 'selected' : '' }}>Delete</option>
-                            </select>
+                            <input id="type" name="type" value="{{ data.type }}" placeholder="faq, tutorial, ui-help" required>
+                            <small>Clasifica el conocimiento: FAQ, tutorial, regla, ayuda de interfaz, etc.</small>
                         </div>
                         <div class="field field--4">
                             <label for="is_global" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
@@ -256,8 +245,15 @@
 
                         <div class="field">
                             <label for="content">Contenido</label>
-                            <textarea id="content" name="content" rows="10" placeholder="Explain the steps..." required>{{ data.content }}</textarea>
-                            <small>Puedes pegar aquí una guía, una FAQ o un ejemplo de conversación. El microservicio lo convertirá en vector.</small>
+                            <textarea id="content" name="content" rows="10" placeholder="Describe el conocimiento que quieres enseñar..." required>{{ data.content }}</textarea>
+                            <small>Puedes pegar aquí una guía, una FAQ o una instrucción clara. El microservicio lo convertirá en vector.</small>
+                        </div>
+
+                        <div class="field field--6">
+                            <label for="vector_note">Sugerencia</label>
+                            <div class="notice" id="vector_note" style="margin-bottom:0;">
+                                Para contenido manual, usa frases claras y directas. Si el conocimiento es para todos los proyectos, marca <strong>Global</strong>. El origen se guarda automáticamente como <code>manual</code>.
+                            </div>
                         </div>
                     </div>
 

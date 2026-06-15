@@ -6,6 +6,8 @@ namespace Maoxtrem\AsistenteIa\Service;
 
 use Maoxtrem\AsistenteIa\DTO\ChatRequest;
 use Maoxtrem\AsistenteIa\DTO\ChatResponse;
+use Maoxtrem\AsistenteIa\DTO\FeedbackRequest;
+use Maoxtrem\AsistenteIa\DTO\FeedbackResponse;
 use Throwable;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -15,6 +17,7 @@ final class ExternalAssistantClient
         private readonly HttpClientInterface $httpClient,
         private readonly string $baseUrl,
         private readonly string $chatEndpoint,
+        private readonly string $feedbackEndpoint,
         private readonly string $apiKey,
         private readonly float $connectTimeout,
         private readonly float $timeout,
@@ -54,9 +57,44 @@ final class ExternalAssistantClient
         );
     }
 
+    public function sendFeedback(FeedbackRequest $feedbackRequest): FeedbackResponse
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->buildFeedbackUrl(), [
+                'headers' => $this->buildHeaders(),
+                'json' => $feedbackRequest->toArray(),
+                'max_connect_duration' => $this->connectTimeout,
+                'timeout' => $this->timeout,
+                'verify_peer' => $this->verifyPeer,
+                'verify_host' => $this->verifyHost,
+            ]);
+
+            $payload = $response->toArray(false);
+        } catch (Throwable $exception) {
+            return new FeedbackResponse(
+                ok: false,
+                message: 'No fue posible conectar con el microservicio de feedback.',
+                raw: ['error' => $exception->getMessage()],
+            );
+        }
+
+        $message = trim((string) ($payload['data']['message'] ?? $payload['message'] ?? ''));
+
+        return new FeedbackResponse(
+            ok: true,
+            message: $message !== '' ? $message : 'El microservicio no devolvio una respuesta de feedback.',
+            raw: is_array($payload) ? $payload : [],
+        );
+    }
+
     private function buildUrl(): string
     {
         return rtrim($this->baseUrl, '/') . '/' . ltrim($this->chatEndpoint, '/');
+    }
+
+    private function buildFeedbackUrl(): string
+    {
+        return rtrim($this->baseUrl, '/') . '/' . ltrim($this->feedbackEndpoint, '/');
     }
 
     private function buildHeaders(): array

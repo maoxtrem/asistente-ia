@@ -18,6 +18,7 @@ final class AsistenteIaExtension extends Extension
 
         $container->setParameter('asistente_ia.base_url', $config['base_url']);
         $container->setParameter('asistente_ia.chat_endpoint', $config['chat_endpoint']);
+        $container->setParameter('asistente_ia.feedback_endpoint', $config['feedback_endpoint']);
         $container->setParameter('asistente_ia.index_endpoint', $config['index_endpoint']);
         $container->setParameter('asistente_ia.tenant_name', $config['tenant_name']);
         $container->setParameter('asistente_ia.api_key', $config['api_key']);

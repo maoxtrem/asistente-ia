@@ -3,6 +3,8 @@
     id="asistente-ia-widget"
     class="asistente-ia-widget"
     data-endpoint="/api/v1/asistente-ia/message"
+    data-feedback-endpoint="/api/v1/asistente-ia/feedback"
+    data-storage-key="{{ ('asistente-ia:' ~ app.request.host ~ ':' ~ asistenteIaLocale)|e('html_attr') }}"
     data-locale="{{ asistenteIaLocale|e('html_attr') }}"
     data-vector-form-url="{{ path('asistente_ia_vector_form')|e('html_attr') }}"
 >

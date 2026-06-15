@@ -19,6 +19,7 @@ services:
     arguments:
       $baseUrl: '%asistente_ia.base_url%'
       $chatEndpoint: '%asistente_ia.chat_endpoint%'
+      $feedbackEndpoint: '%asistente_ia.feedback_endpoint%'
       $apiKey: '%asistente_ia.api_key%'
       $connectTimeout: '%asistente_ia.connect_timeout%'
       $timeout: '%asistente_ia.timeout%'
@@ -38,6 +39,10 @@ services:
       $defaultHeaders: '%asistente_ia.default_headers%'
 
   Maoxtrem\AsistenteIa\Controller\Api\ChatRequestController:
+    arguments:
+      $tenantName: '%asistente_ia.tenant_name%'
+
+  Maoxtrem\AsistenteIa\Controller\Api\FeedbackController:
     arguments:
       $tenantName: '%asistente_ia.tenant_name%'
 

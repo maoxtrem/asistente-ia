@@ -14,6 +14,7 @@
     applyTheme(widget);
 
     const endpoint = widget.dataset.endpoint || '/api/v1/asistente-ia/message';
+    const feedbackEndpoint = widget.dataset.feedbackEndpoint || '/api/v1/asistente-ia/feedback';
     const vectorFormUrl = widget.dataset.vectorFormUrl || '';
     const locale = normalizeLocale(window.locale || widget.dataset.locale || document.documentElement.lang || navigator.language || '');
     const toggle = document.getElementById('asistente-ia-toggle');
@@ -23,6 +24,19 @@
     const input = document.getElementById('asistente-ia-input');
     const submitButton = document.getElementById('asistente-ia-submit');
     const messages = document.getElementById('asistente-ia-messages');
+    const storageKey = widget.dataset.storageKey || `asistente-ia:${window.location.host}:${locale}`;
+    const maxPersistedMessages = Number(widget.dataset.maxPersistedMessages || 40);
+    const canUseStorage = (() => {
+        try {
+            const testKey = '__asistente_ia_storage_test__';
+            window.localStorage.setItem(testKey, '1');
+            window.localStorage.removeItem(testKey);
+            return true;
+        } catch (error) {
+            console.warn('[AsistenteIA] localStorage no disponible', error);
+            return false;
+        }
+    })();
 
     if (!panel || !form || !input || !submitButton || !messages) {
         console.warn('[AsistenteIA] Faltan nodos del widget');
@@ -48,18 +62,116 @@
     let typingIndicator = null;
     let visibilitySeq = 0;
     let lastOpenSeq = 0;
+    let persistedMessages = [];
+
+    const createMessageId = () => {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID();
+        }
+
+        return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    };
+
+    const loadConversationState = () => {
+        if (!canUseStorage) {
+            return null;
+        }
+
+        try {
+            const raw = window.localStorage.getItem(storageKey);
+            if (!raw) {
+                return null;
+            }
+
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch (error) {
+            console.warn('[AsistenteIA] no fue posible leer el estado persistido', error);
+            return null;
+        }
+    };
+
+    const saveConversationState = () => {
+        if (!canUseStorage) {
+            return;
+        }
+
+        try {
+            window.localStorage.setItem(storageKey, JSON.stringify({
+                conversationId,
+                isOpen: panel.classList.contains('is-open'),
+                messages: persistedMessages.slice(-maxPersistedMessages),
+            }));
+        } catch (error) {
+            console.warn('[AsistenteIA] no fue posible guardar el estado persistido', error);
+        }
+    };
+
+    const updatePersistedMessage = (messageId, updater) => {
+        const index = persistedMessages.findIndex((item) => item && item.id === messageId);
+        if (index === -1) {
+            return null;
+        }
+
+        const updated = updater({ ...persistedMessages[index] });
+        if (!updated || typeof updated !== 'object') {
+            return null;
+        }
+
+        persistedMessages[index] = updated;
+        saveConversationState();
+        return updated;
+    };
 
     const isSafeInternalRoute = (href) => {
         return typeof href === 'string' && /^(\/(?!\/)|#)/.test(href);
     };
 
-    const appendMessage = (role, text, links = []) => {
+    const appendMessage = (role, text, links = [], options = {}) => {
         const item = document.createElement('article');
         item.className = 'asistente-ia-message asistente-ia-message--' + role;
+        item.dataset.messageId = options.messageId || createMessageId();
 
         const paragraph = document.createElement('p');
         paragraph.textContent = text;
         item.appendChild(paragraph);
+
+        if (role === 'assistant' && options.feedbackEnabled !== false) {
+            const feedbackState = options.feedbackState || 'pending';
+            const feedbackBar = document.createElement('div');
+            feedbackBar.className = 'asistente-ia-message__feedback';
+            feedbackBar.dataset.question = options.question || '';
+            feedbackBar.dataset.answer = text;
+            feedbackBar.dataset.conversationId = options.conversationId || '';
+            feedbackBar.dataset.locale = options.locale || locale;
+            feedbackBar.dataset.messageId = item.dataset.messageId;
+            feedbackBar.dataset.feedbackState = feedbackState;
+            feedbackBar.innerHTML = `
+                <button type="button" class="asistente-ia-message__feedback-btn" data-feedback-value="1">Fue útil</button>
+                <button type="button" class="asistente-ia-message__feedback-btn" data-feedback-value="0">No fue útil</button>
+                <span class="asistente-ia-message__feedback-status" aria-live="polite"></span>
+            `;
+
+            const status = feedbackBar.querySelector('.asistente-ia-message__feedback-status');
+            const buttons = feedbackBar.querySelectorAll('button');
+
+            if (feedbackState === 'sending' || feedbackState === 'done') {
+                buttons.forEach((btn) => {
+                    btn.disabled = true;
+                });
+            }
+
+            if (status) {
+                const helpful = typeof options.helpful === 'boolean' ? options.helpful : null;
+                if (feedbackState === 'sending') {
+                    status.textContent = options.feedbackStatus || 'Enviando...';
+                } else if (feedbackState === 'done') {
+                    status.textContent = options.feedbackStatus || (helpful ? 'Gracias por tu ayuda.' : 'Feedback registrado.');
+                }
+            }
+
+            item.appendChild(feedbackBar);
+        }
 
         if (Array.isArray(links) && links.length > 0) {
             const list = document.createElement('div');
@@ -86,6 +198,154 @@
 
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight;
+
+        if (options.persist !== false) {
+            persistedMessages.push({
+                id: item.dataset.messageId,
+                role,
+                text,
+                links: Array.isArray(links) ? links : [],
+                question: typeof options.question === 'string' ? options.question : '',
+                conversationId: typeof options.conversationId === 'string' ? options.conversationId : '',
+                locale: typeof options.locale === 'string' ? options.locale : locale,
+                feedbackEnabled: role === 'assistant' ? options.feedbackEnabled !== false : false,
+                feedback: role === 'assistant' && options.feedbackEnabled !== false ? {
+                    state: options.feedbackState || 'pending',
+                    helpful: typeof options.helpful === 'boolean' ? options.helpful : null,
+                    status: options.feedbackStatus || '',
+                } : null,
+            });
+
+            if (persistedMessages.length > maxPersistedMessages) {
+                persistedMessages = persistedMessages.slice(-maxPersistedMessages);
+            }
+
+            saveConversationState();
+        }
+
+        return item;
+    };
+
+    const restoreConversation = () => {
+        const state = loadConversationState();
+        if (!state || !Array.isArray(state.messages) || state.messages.length === 0) {
+            return;
+        }
+
+        conversationId = typeof state.conversationId === 'string' && state.conversationId.trim() !== ''
+            ? state.conversationId.trim()
+            : null;
+
+        persistedMessages = state.messages
+            .filter((item) => item && typeof item === 'object' && typeof item.role === 'string' && typeof item.text === 'string')
+            .map((item) => ({
+                id: typeof item.id === 'string' && item.id.trim() !== '' ? item.id : createMessageId(),
+                role: item.role,
+                text: item.text,
+                links: Array.isArray(item.links) ? item.links : [],
+                question: typeof item.question === 'string' ? item.question : '',
+                conversationId: typeof item.conversationId === 'string' ? item.conversationId : '',
+                locale: typeof item.locale === 'string' ? item.locale : locale,
+                feedbackEnabled: item.feedbackEnabled !== false,
+                feedback: item.feedback && typeof item.feedback === 'object' ? item.feedback : null,
+            }));
+
+        messages.innerHTML = '';
+        persistedMessages.forEach((item) => {
+            appendMessage(item.role, item.text, item.links, {
+                messageId: item.id,
+                question: item.question,
+                conversationId: item.conversationId || conversationId || '',
+                locale: item.locale || locale,
+                feedbackEnabled: item.role === 'assistant' && item.feedbackEnabled !== false,
+                feedbackState: item.feedback?.state || 'pending',
+                helpful: typeof item.feedback?.helpful === 'boolean' ? item.feedback.helpful : null,
+                feedbackStatus: item.feedback?.status || '',
+                persist: false,
+            });
+        });
+
+        messages.scrollTop = messages.scrollHeight;
+
+        if (state.isOpen) {
+            setPanelVisibility(true, 'restore-conversation');
+        }
+    };
+
+    const sendFeedback = async (button, helpful) => {
+        const feedbackBar = button.closest('.asistente-ia-message__feedback');
+        if (!feedbackBar || feedbackBar.dataset.feedbackState !== 'pending') {
+            return;
+        }
+
+        const question = (feedbackBar.dataset.question || '').trim();
+        const answer = (feedbackBar.dataset.answer || '').trim();
+        const feedbackConversationId = (feedbackBar.dataset.conversationId || conversationId || '').trim();
+        const messageId = (feedbackBar.dataset.messageId || '').trim();
+
+        if (question === '' || answer === '' || feedbackConversationId === '') {
+            return;
+        }
+
+        feedbackBar.dataset.feedbackState = 'sending';
+        feedbackBar.querySelectorAll('button').forEach((btn) => {
+            btn.disabled = true;
+        });
+
+        const status = feedbackBar.querySelector('.asistente-ia-message__feedback-status');
+        if (status) {
+            status.textContent = helpful ? 'Gracias por tu ayuda.' : 'Gracias, lo revisaremos.';
+        }
+
+        try {
+            const response = await fetch(feedbackEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    conversation_id: feedbackConversationId,
+                    helpful,
+                    question,
+                    answer,
+                    locale,
+                    context: {
+                        pathname: window.location.pathname
+                    }
+                })
+            });
+
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || !payload?.ok) {
+                throw new Error(payload?.error?.message || payload?.message || 'No fue posible registrar el feedback.');
+            }
+
+            const resultMessage = payload?.data?.message || payload?.message || (helpful ? 'Gracias por tu ayuda.' : 'Feedback registrado.');
+            feedbackBar.dataset.feedbackState = 'done';
+            if (messageId !== '') {
+                updatePersistedMessage(messageId, (message) => ({
+                    ...message,
+                    feedback: {
+                        state: 'done',
+                        helpful,
+                        status: resultMessage,
+                    },
+                }));
+            }
+            if (status) {
+                status.textContent = resultMessage;
+            }
+        } catch (error) {
+            console.error('[AsistenteIA] error al registrar feedback', error);
+            feedbackBar.dataset.feedbackState = 'pending';
+            feedbackBar.querySelectorAll('button').forEach((btn) => {
+                btn.disabled = false;
+            });
+            if (status) {
+                status.textContent = 'No fue posible enviar el feedback.';
+            }
+        }
     };
 
     const setSendingState = (isSending) => {
@@ -161,6 +421,7 @@
             input.focus();
         }
         logPanelState(reason);
+        saveConversationState();
 
         if (isOpen) {
             window.setTimeout(() => {
@@ -300,18 +561,37 @@
 
             if (payload?.data?.conversation_id) {
                 conversationId = payload.data.conversation_id;
+                saveConversationState();
             }
 
-            appendMessage('assistant', reply, links);
+            appendMessage('assistant', reply, links, {
+                question: message,
+                conversationId: payload?.data?.conversation_id || conversationId,
+                locale,
+            });
         } catch (error) {
             console.error('[AsistenteIA] error al consultar el asistente', error);
-            appendMessage('assistant', 'Ocurrio un error al consultar el asistente.');
+            appendMessage('assistant', 'Ocurrio un error al consultar el asistente.', [], {
+                feedbackEnabled: false,
+            });
         } finally {
             hideTypingIndicator();
             setSendingState(false);
             input.focus();
         }
     });
+
+    messages.addEventListener('click', (event) => {
+        const button = event.target instanceof Element ? event.target.closest('.asistente-ia-message__feedback-btn') : null;
+        if (!button) {
+            return;
+        }
+
+        const helpful = button.getAttribute('data-feedback-value') === '1';
+        void sendFeedback(button, helpful);
+    });
+
+    restoreConversation();
 })();
 
 function applyTheme(widget) {

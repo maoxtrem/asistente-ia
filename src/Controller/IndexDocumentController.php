@@ -13,6 +13,8 @@ use Twig\Environment;
 
 final class IndexDocumentController
 {
+    private const MANUAL_SOURCE = 'manual';
+
     public function __construct(
         private readonly Environment $twig,
         private readonly ExternalIndexClient $indexClient,
@@ -33,14 +35,14 @@ final class IndexDocumentController
 
             if ($errors === []) {
                 $document = IndexDocument::fromArray([
-                    'id' => $data['id'],
+                    'id' => $data['id'] !== '' ? $data['id'] : $this->buildDocumentId($data),
                     'type' => $data['type'],
-                    'source' => $data['source'],
+                    'source' => self::MANUAL_SOURCE,
                     'tenant' => $data['tenant'],
                     'title' => $data['title'],
                     'content' => $data['content'],
                     'metadata' => $this->decodeMetadata($data['metadata_json']),
-                    'operation' => $data['operation'],
+                    'operation' => 'upsert',
                 ]);
 
                 $result = $this->indexClient->index($document);
@@ -62,26 +64,24 @@ final class IndexDocumentController
     }
 
     /**
-     * @return array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string, is_global:bool }
+     * @return array{ id:string, type:string, tenant:string, title:string, content:string, metadata_json:string, is_global:bool }
      */
     private function defaultFormData(): array
     {
         return [
             'id' => '',
             'type' => 'custom_document',
-            'source' => 'manual',
             'tenant' => $this->tenantName,
             'title' => '',
             'content' => '',
             'metadata_json' => "{\n  \"language\": \"en\",\n  \"topic\": \"language-switch\"\n}",
-            'operation' => 'upsert',
             'is_global' => false,
         ];
     }
 
     /**
      * @param array<string, mixed> $payload
-     * @return array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string, is_global:bool }
+     * @return array{ id:string, type:string, tenant:string, title:string, content:string, metadata_json:string, is_global:bool }
      */
     private function normalizeFormData(array $payload): array
     {
@@ -92,35 +92,23 @@ final class IndexDocumentController
         return [
             'id' => trim((string) ($payload['id'] ?? $defaults['id'])),
             'type' => trim((string) ($payload['type'] ?? $defaults['type'])),
-            'source' => trim((string) ($payload['source'] ?? $defaults['source'])),
             'tenant' => $tenant,
             'title' => trim((string) ($payload['title'] ?? $defaults['title'])),
             'content' => trim((string) ($payload['content'] ?? $defaults['content'])),
             'metadata_json' => trim((string) ($payload['metadata_json'] ?? $defaults['metadata_json'])),
-            'operation' => trim((string) ($payload['operation'] ?? $defaults['operation'])),
             'is_global' => $isGlobal,
         ];
     }
 
     /**
-     * @param array{ id:string, type:string, source:string, tenant:string, title:string, content:string, metadata_json:string, operation:string, is_global:bool } $data
+     * @param array{ id:string, type:string, tenant:string, title:string, content:string, metadata_json:string, is_global:bool } $data
      * @return list<string>
      */
     private function validate(array $data): array
     {
         $errors = [];
 
-        if ($data['operation'] === 'delete') {
-            foreach (['id', 'type', 'source', 'tenant'] as $field) {
-                if ($data[$field] === '') {
-                    $errors[] = sprintf('El campo %s es obligatorio para eliminar.', $field);
-                }
-            }
-
-            return $errors;
-        }
-
-        foreach (['type', 'source', 'tenant', 'title', 'content'] as $field) {
+        foreach (['type', 'tenant', 'title', 'content'] as $field) {
             if ($data[$field] === '') {
                 $errors[] = sprintf('El campo %s es obligatorio.', $field);
             }
@@ -131,6 +119,21 @@ final class IndexDocumentController
         }
 
         return $errors;
+    }
+
+    /**
+     * @param array{ id:string, type:string, tenant:string, title:string, content:string, metadata_json:string, is_global:bool } $data
+     */
+    private function buildDocumentId(array $data): string
+    {
+        $seed = implode('|', [
+            $data['tenant'],
+            $data['type'],
+            $data['title'],
+            mb_substr($data['content'], 0, 160),
+        ]);
+
+        return substr(hash('sha256', mb_strtolower($seed)), 0, 64);
     }
 
     private function normalizeCheckbox(mixed $value): bool

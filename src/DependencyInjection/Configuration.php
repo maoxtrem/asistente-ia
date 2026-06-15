@@ -17,6 +17,7 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->scalarNode('base_url')->defaultValue('http://host.docker.internal:8001')->end()
                 ->scalarNode('chat_endpoint')->defaultValue('/api/chat')->end()
+                ->scalarNode('feedback_endpoint')->defaultValue('/api/feedback')->end()
                 ->scalarNode('index_endpoint')->defaultValue('/api/index/documents')->end()
                 ->scalarNode('tenant_name')->defaultValue('default')->end()
                 ->scalarNode('api_key')->defaultValue('')->end()

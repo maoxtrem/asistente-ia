@@ -10,13 +10,18 @@ use Twig\Environment;
 
 final class WidgetController
 {
-    public function __construct(private readonly Environment $twig)
+    public function __construct(
+        private readonly Environment $twig,
+        private readonly string $tenantName,
+    )
     {
     }
 
     #[Route('/asistente-ia/widget', name: 'asistente_ia_widget', methods: ['GET'])]
     public function __invoke(): Response
     {
-        return new Response($this->twig->render('@AsistenteIa/widget/bubble.html.twig'));
+        return new Response($this->twig->render('@AsistenteIa/widget/bubble.html.twig', [
+            'tenantName' => $this->tenantName,
+        ]));
     }
 }

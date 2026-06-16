@@ -14,9 +14,12 @@
     applyTheme(widget);
 
     const endpoint = widget.dataset.endpoint || '/api/v1/asistente-ia/message';
+    const bootstrapEndpoint = widget.dataset.bootstrapEndpoint || '/api/v1/asistente-ia/bootstrap';
     const feedbackEndpoint = widget.dataset.feedbackEndpoint || '/api/v1/asistente-ia/feedback';
     const vectorFormUrl = widget.dataset.vectorFormUrl || '';
     const locale = normalizeLocale(window.locale || widget.dataset.locale || document.documentElement.lang || navigator.language || '');
+    const tenant = (widget.dataset.tenant || '').trim();
+    const clientKey = (widget.dataset.clientKey || '').trim();
     const toggle = document.getElementById('asistente-ia-toggle');
     const panel = document.getElementById('asistente-ia-panel');
     const closeButton = document.getElementById('asistente-ia-close');
@@ -24,7 +27,7 @@
     const input = document.getElementById('asistente-ia-input');
     const submitButton = document.getElementById('asistente-ia-submit');
     const messages = document.getElementById('asistente-ia-messages');
-    const storageKey = widget.dataset.storageKey || `asistente-ia:${window.location.host}:${locale}`;
+    const storageKey = widget.dataset.storageKey || `asistente-ia:v2:${window.location.host}:${tenant || 'default'}:${clientKey || 'guest'}:${locale}`;
     const maxPersistedMessages = Number(widget.dataset.maxPersistedMessages || 40);
     const canUseStorage = (() => {
         try {
@@ -98,6 +101,11 @@
 
         try {
             window.localStorage.setItem(storageKey, JSON.stringify({
+                version: 2,
+                tenant,
+                clientKey,
+                locale,
+                host: window.location.host,
                 conversationId,
                 isOpen: panel.classList.contains('is-open'),
                 messages: persistedMessages.slice(-maxPersistedMessages),
@@ -105,6 +113,101 @@
         } catch (error) {
             console.warn('[AsistenteIA] no fue posible guardar el estado persistido', error);
         }
+    };
+
+    const clearConversationMessages = () => {
+        messages.innerHTML = '';
+        persistedMessages = [];
+    };
+
+    const getGreetingText = () => {
+        if (locale.startsWith('en')) {
+            return 'Hello, I am your assistant. How can I help you?';
+        }
+
+        if (locale.startsWith('fr')) {
+            return 'Bonjour, je suis votre assistant. Comment puis-je vous aider ?';
+        }
+
+        if (locale.startsWith('pt')) {
+            return 'Olá, sou seu assistente. Como posso ajudar?';
+        }
+
+        return 'Hola, soy tu asistente. ¿En qué te ayudo?';
+    };
+
+    const renderGreeting = () => {
+        appendMessage('assistant', getGreetingText(), [], {
+            feedbackEnabled: false,
+            persist: false,
+        });
+    };
+
+    const renderConversationFromServer = (serverMessages = [], nextConversationId = null) => {
+        clearConversationMessages();
+        renderGreeting();
+
+        let lastUserMessage = '';
+
+        for (const item of serverMessages) {
+            if (!item || typeof item !== 'object') {
+                continue;
+            }
+
+            const role = typeof item.role === 'string' ? item.role : '';
+            const text = typeof item.content === 'string' ? item.content : '';
+            const links = Array.isArray(item.links) ? item.links : [];
+
+            if (role === 'user') {
+                lastUserMessage = text;
+                const messageId = createMessageId();
+                appendMessage('user', text, [], {
+                    messageId,
+                    persist: false,
+                });
+                persistedMessages.push({
+                    id: messageId,
+                    role: 'user',
+                    text,
+                    links: [],
+                    question: '',
+                    conversationId: nextConversationId || conversationId || '',
+                    locale,
+                    feedbackEnabled: false,
+                    feedback: null,
+                });
+                continue;
+            }
+
+            if (role === 'assistant') {
+                const messageId = createMessageId();
+                appendMessage('assistant', text, links, {
+                    messageId,
+                    question: lastUserMessage,
+                    conversationId: nextConversationId || conversationId || '',
+                    locale,
+                    feedbackEnabled: true,
+                    persist: false,
+                });
+                persistedMessages.push({
+                    id: messageId,
+                    role: 'assistant',
+                    text,
+                    links,
+                    question: lastUserMessage,
+                    conversationId: nextConversationId || conversationId || '',
+                    locale,
+                    feedbackEnabled: true,
+                    feedback: null,
+                });
+            }
+        }
+
+        conversationId = typeof nextConversationId === 'string' && nextConversationId.trim() !== ''
+            ? nextConversationId.trim()
+            : conversationId;
+
+        saveConversationState();
     };
 
     const updatePersistedMessage = (messageId, updater) => {
@@ -232,6 +335,23 @@
             return;
         }
 
+        const stateTenant = typeof state.tenant === 'string' ? state.tenant.trim() : '';
+        const stateClientKey = typeof state.clientKey === 'string' ? state.clientKey.trim() : '';
+        const stateLocale = typeof state.locale === 'string' ? normalizeLocale(state.locale) : '';
+        const stateHost = typeof state.host === 'string' ? state.host.trim() : '';
+
+        if (
+            stateTenant !== tenant
+            || stateClientKey !== clientKey
+            || (stateLocale !== '' && stateLocale !== locale)
+            || (stateHost !== '' && stateHost !== window.location.host)
+        ) {
+            if (canUseStorage) {
+                window.localStorage.removeItem(storageKey);
+            }
+            return;
+        }
+
         conversationId = typeof state.conversationId === 'string' && state.conversationId.trim() !== ''
             ? state.conversationId.trim()
             : null;
@@ -250,7 +370,8 @@
                 feedback: item.feedback && typeof item.feedback === 'object' ? item.feedback : null,
             }));
 
-        messages.innerHTML = '';
+        clearConversationMessages();
+        renderGreeting();
         persistedMessages.forEach((item) => {
             appendMessage(item.role, item.text, item.links, {
                 messageId: item.id,
@@ -269,6 +390,46 @@
 
         if (state.isOpen) {
             setPanelVisibility(true, 'restore-conversation');
+        }
+    };
+
+    const bootstrapConversation = async () => {
+        if (!bootstrapEndpoint || !clientKey) {
+            return;
+        }
+
+        try {
+            const response = await fetch(bootstrapEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    tenant: widget.dataset.tenant || '',
+                    client_key: clientKey,
+                    conversation_id: conversationId,
+                    locale,
+                    limit: maxPersistedMessages,
+                })
+            });
+
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || !payload?.ok) {
+                return;
+            }
+
+            const nextConversationId = payload?.data?.conversation_id || null;
+            const serverMessages = Array.isArray(payload?.data?.messages) ? payload.data.messages : [];
+
+            if (nextConversationId || serverMessages.length > 0) {
+                renderConversationFromServer(serverMessages, nextConversationId);
+            } else if (nextConversationId) {
+                conversationId = nextConversationId;
+                saveConversationState();
+            }
+        } catch (error) {
+            console.warn('[AsistenteIA] bootstrapConversation fallo', error);
         }
     };
 
@@ -306,6 +467,7 @@
                 },
                 body: JSON.stringify({
                     conversation_id: feedbackConversationId,
+                    client_key: clientKey,
                     helpful,
                     question,
                     answer,
@@ -541,6 +703,7 @@
                 body: JSON.stringify({
                     message,
                     conversation_id: conversationId,
+                    client_key: clientKey,
                     locale,
                     context: {
                         pathname: window.location.pathname
@@ -592,6 +755,7 @@
     });
 
     restoreConversation();
+    void bootstrapConversation();
 })();
 
 function applyTheme(widget) {

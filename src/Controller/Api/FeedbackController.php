@@ -51,6 +51,10 @@ final class FeedbackController
         return new JsonResponse([
             'ok' => $response->ok,
             'data' => $response->toArray(),
+            'bundle' => [
+                'widget_url' => '/asistente-ia/widget',
+                'vector_form_url' => '/asistente-ia/vectorial',
+            ],
         ], $response->ok ? JsonResponse::HTTP_OK : JsonResponse::HTTP_BAD_GATEWAY);
     }
 }

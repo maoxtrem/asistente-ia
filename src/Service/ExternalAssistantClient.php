@@ -6,6 +6,8 @@ namespace Maoxtrem\AsistenteIa\Service;
 
 use Maoxtrem\AsistenteIa\DTO\ChatRequest;
 use Maoxtrem\AsistenteIa\DTO\ChatResponse;
+use Maoxtrem\AsistenteIa\DTO\ConversationBootstrapRequest;
+use Maoxtrem\AsistenteIa\DTO\ConversationBootstrapResponse;
 use Maoxtrem\AsistenteIa\DTO\FeedbackRequest;
 use Maoxtrem\AsistenteIa\DTO\FeedbackResponse;
 use Throwable;
@@ -16,6 +18,7 @@ final class ExternalAssistantClient
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly string $baseUrl,
+        private readonly string $bootstrapEndpoint,
         private readonly string $chatEndpoint,
         private readonly string $feedbackEndpoint,
         private readonly string $apiKey,
@@ -57,6 +60,38 @@ final class ExternalAssistantClient
         );
     }
 
+    public function bootstrapConversation(ConversationBootstrapRequest $bootstrapRequest): ConversationBootstrapResponse
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->buildBootstrapUrl(), [
+                'headers' => $this->buildHeaders(),
+                'json' => $bootstrapRequest->toArray(),
+                'max_connect_duration' => $this->connectTimeout,
+                'timeout' => $this->timeout,
+                'verify_peer' => $this->verifyPeer,
+                'verify_host' => $this->verifyHost,
+            ]);
+
+            $payload = $response->toArray(false);
+        } catch (Throwable $exception) {
+            return new ConversationBootstrapResponse(
+                conversationId: null,
+                messages: [],
+                raw: ['error' => $exception->getMessage()],
+            );
+        }
+
+        $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
+        $conversationId = $data['conversation_id'] ?? $payload['conversation_id'] ?? null;
+        $messages = is_array($data['messages'] ?? null) ? $data['messages'] : [];
+
+        return new ConversationBootstrapResponse(
+            conversationId: is_string($conversationId) && trim($conversationId) !== '' ? $conversationId : null,
+            messages: $messages,
+            raw: is_array($payload) ? $payload : [],
+        );
+    }
+
     public function sendFeedback(FeedbackRequest $feedbackRequest): FeedbackResponse
     {
         try {
@@ -90,6 +125,11 @@ final class ExternalAssistantClient
     private function buildUrl(): string
     {
         return rtrim($this->baseUrl, '/') . '/' . ltrim($this->chatEndpoint, '/');
+    }
+
+    private function buildBootstrapUrl(): string
+    {
+        return rtrim($this->baseUrl, '/') . '/' . ltrim($this->bootstrapEndpoint, '/');
     }
 
     private function buildFeedbackUrl(): string

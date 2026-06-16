@@ -1,11 +1,15 @@
 {% set asistenteIaLocale = (app.session is not null ? app.session.get('_locale', app.request.locale|default('en')) : app.request.locale|default('en'))|lower %}
+{% set asistenteIaClientKey = app.user is not null ? app.user.userIdentifier : (app.session is not null ? app.session.getId() : 'anonymous') %}
 <div
     id="asistente-ia-widget"
     class="asistente-ia-widget"
     data-endpoint="/api/v1/asistente-ia/message"
+    data-bootstrap-endpoint="/api/v1/asistente-ia/bootstrap"
     data-feedback-endpoint="/api/v1/asistente-ia/feedback"
-    data-storage-key="{{ ('asistente-ia:' ~ app.request.host ~ ':' ~ asistenteIaLocale)|e('html_attr') }}"
+    data-tenant="{{ (tenantName|default(asistente_ia_tenant_name|default(app.request.host)))|e('html_attr') }}"
+    data-storage-key="{{ ('asistente-ia:v2:' ~ app.request.host ~ ':' ~ (tenantName|default(asistente_ia_tenant_name|default(app.request.host))) ~ ':' ~ asistenteIaClientKey ~ ':' ~ asistenteIaLocale)|e('html_attr') }}"
     data-locale="{{ asistenteIaLocale|e('html_attr') }}"
+    data-client-key="{{ asistenteIaClientKey|e('html_attr') }}"
     data-vector-form-url="{{ path('asistente_ia_vector_form')|e('html_attr') }}"
 >
     <section id="asistente-ia-panel" class="asistente-ia-panel" aria-hidden="true">

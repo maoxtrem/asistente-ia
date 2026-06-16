@@ -15,9 +15,14 @@ services:
     resource: '../src/Controller/'
     tags: ['controller.service_arguments']
 
+  Maoxtrem\AsistenteIa\Controller\WidgetController:
+    arguments:
+      $tenantName: '%asistente_ia.tenant_name%'
+
   Maoxtrem\AsistenteIa\Service\ExternalAssistantClient:
     arguments:
       $baseUrl: '%asistente_ia.base_url%'
+      $bootstrapEndpoint: '%asistente_ia.bootstrap_endpoint%'
       $chatEndpoint: '%asistente_ia.chat_endpoint%'
       $feedbackEndpoint: '%asistente_ia.feedback_endpoint%'
       $apiKey: '%asistente_ia.api_key%'
@@ -43,6 +48,10 @@ services:
       $tenantName: '%asistente_ia.tenant_name%'
 
   Maoxtrem\AsistenteIa\Controller\Api\FeedbackController:
+    arguments:
+      $tenantName: '%asistente_ia.tenant_name%'
+
+  Maoxtrem\AsistenteIa\Controller\Api\BootstrapController:
     arguments:
       $tenantName: '%asistente_ia.tenant_name%'
 

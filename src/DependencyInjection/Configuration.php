@@ -16,6 +16,7 @@ final class Configuration implements ConfigurationInterface
         $treeBuilder->getRootNode()
             ->children()
                 ->scalarNode('base_url')->defaultValue('http://host.docker.internal:8001')->end()
+                ->scalarNode('bootstrap_endpoint')->defaultValue('/api/bootstrap')->end()
                 ->scalarNode('chat_endpoint')->defaultValue('/api/chat')->end()
                 ->scalarNode('feedback_endpoint')->defaultValue('/api/feedback')->end()
                 ->scalarNode('index_endpoint')->defaultValue('/api/index/documents')->end()

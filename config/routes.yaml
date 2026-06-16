@@ -6,6 +6,10 @@ asistente_ia_api:
   resource: '../src/Controller/Api/ChatRequestController.php'
   type: attribute
 
+asistente_ia_api_bootstrap:
+  resource: '../src/Controller/Api/BootstrapController.php'
+  type: attribute
+
 asistente_ia_api_feedback:
   resource: '../src/Controller/Api/FeedbackController.php'
   type: attribute

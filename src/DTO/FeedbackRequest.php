@@ -8,6 +8,7 @@ final class FeedbackRequest
 {
     public function __construct(
         public readonly ?string $conversationId,
+        public readonly string $clientKey,
         public readonly string $tenant,
         public readonly string $locale,
         public readonly bool $helpful,
@@ -22,6 +23,7 @@ final class FeedbackRequest
     {
         return new self(
             conversationId: self::nullableString($payload['conversation_id'] ?? null),
+            clientKey: trim((string) ($payload['client_key'] ?? '')),
             tenant: trim((string) ($payload['tenant'] ?? '')),
             locale: self::normalizeLocale($payload['locale'] ?? null),
             helpful: self::normalizeBool($payload['helpful'] ?? false),
@@ -36,6 +38,7 @@ final class FeedbackRequest
     {
         return [
             'conversation_id' => $this->conversationId,
+            'client_key' => $this->clientKey,
             'tenant' => $this->tenant,
             'locale' => $this->locale,
             'helpful' => $this->helpful,

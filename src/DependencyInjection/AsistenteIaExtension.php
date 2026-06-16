@@ -17,6 +17,7 @@ final class AsistenteIaExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('asistente_ia.base_url', $config['base_url']);
+        $container->setParameter('asistente_ia.bootstrap_endpoint', $config['bootstrap_endpoint']);
         $container->setParameter('asistente_ia.chat_endpoint', $config['chat_endpoint']);
         $container->setParameter('asistente_ia.feedback_endpoint', $config['feedback_endpoint']);
         $container->setParameter('asistente_ia.index_endpoint', $config['index_endpoint']);

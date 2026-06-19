@@ -7,6 +7,7 @@ namespace Maoxtrem\AsistenteIa\Controller;
 use Maoxtrem\AsistenteIa\DTO\IndexDocument;
 use Maoxtrem\AsistenteIa\Service\ExternalIndexClient;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Twig\Environment;
@@ -28,9 +29,11 @@ final class IndexDocumentController
         $data = $this->defaultFormData();
         $result = null;
         $errors = [];
+        $wantsJson = $this->wantsJsonResponse($request);
 
         if ($request->isMethod('POST')) {
-            $data = $this->normalizeFormData($request->request->all());
+            $incomingPayload = $this->readIncomingPayload($request);
+            $data = $this->normalizeFormData($incomingPayload);
             $errors = $this->validate($data);
 
             if ($errors === []) {
@@ -52,6 +55,26 @@ final class IndexDocumentController
                 } else {
                     $errors[] = $result->message;
                 }
+            }
+
+            if ($wantsJson) {
+                if ($errors !== []) {
+                    return new JsonResponse([
+                        'ok' => false,
+                        'message' => implode(' ', $errors),
+                        'errors' => $errors,
+                        'data' => $data,
+                    ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                return new JsonResponse([
+                    'ok' => $result?->ok ?? false,
+                    'message' => $result?->message ?? 'Documento procesado.',
+                    'collection' => $result?->collection,
+                    'point_id' => $result?->pointId,
+                    'raw' => $result?->raw ?? [],
+                    'data' => $data,
+                ], ($result?->ok ?? false) ? JsonResponse::HTTP_OK : JsonResponse::HTTP_BAD_GATEWAY);
             }
         }
 
@@ -87,7 +110,22 @@ final class IndexDocumentController
     {
         $defaults = $this->defaultFormData();
         $isGlobal = $this->normalizeCheckbox($payload['is_global'] ?? false);
-        $tenant = $isGlobal ? 'global' : $this->tenantName;
+        $tenant = trim((string) ($payload['tenant'] ?? ''));
+
+        if ($tenant === '') {
+            $tenant = $isGlobal ? 'global' : $this->tenantName;
+        } elseif ($isGlobal) {
+            $tenant = 'global';
+        }
+
+        $metadataJson = trim((string) ($payload['metadata_json'] ?? ''));
+        if ($metadataJson === '' && isset($payload['metadata']) && is_array($payload['metadata'])) {
+            try {
+                $metadataJson = json_encode($payload['metadata'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            } catch (\JsonException) {
+                $metadataJson = '';
+            }
+        }
 
         return [
             'id' => trim((string) ($payload['id'] ?? $defaults['id'])),
@@ -95,9 +133,33 @@ final class IndexDocumentController
             'tenant' => $tenant,
             'title' => trim((string) ($payload['title'] ?? $defaults['title'])),
             'content' => trim((string) ($payload['content'] ?? $defaults['content'])),
-            'metadata_json' => trim((string) ($payload['metadata_json'] ?? $defaults['metadata_json'])),
+            'metadata_json' => $metadataJson !== '' ? $metadataJson : $defaults['metadata_json'],
             'is_global' => $isGlobal,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function readIncomingPayload(Request $request): array
+    {
+        $contentType = strtolower(trim((string) $request->headers->get('Content-Type', '')));
+
+        if (str_contains($contentType, 'application/json')) {
+            $decoded = json_decode($request->getContent(), true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return $request->request->all();
+    }
+
+    private function wantsJsonResponse(Request $request): bool
+    {
+        $contentType = strtolower(trim((string) $request->headers->get('Content-Type', '')));
+        $accept = strtolower(trim((string) $request->headers->get('Accept', '')));
+
+        return str_contains($contentType, 'application/json') || str_contains($accept, 'application/json');
     }
 
     /**

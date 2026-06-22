@@ -1,4 +1,10 @@
 {% set asistenteIaLocale = (app.session is not null ? app.session.get('_locale', app.request.locale|default('en')) : app.request.locale|default('en'))|lower %}
+{% set asistenteIaIsEnglish = asistenteIaLocale|slice(0, 2) == 'en' %}
+{% set asistenteIaWidgetLabel = asistenteIaIsEnglish ? 'AI Assistant' : 'Asistente IA' %}
+{% set asistenteIaCloseLabel = asistenteIaIsEnglish ? 'Close' : 'Cerrar' %}
+{% set asistenteIaGreeting = asistenteIaIsEnglish ? 'Hello, I am your assistant. How can I help you?' : 'Hola, soy tu asistente. ¿En qué te ayudo?' %}
+{% set asistenteIaInputPlaceholder = asistenteIaIsEnglish ? 'Type your message' : 'Escribe tu mensaje' %}
+{% set asistenteIaSubmitLabel = asistenteIaIsEnglish ? 'Send message' : 'Enviar mensaje' %}
 {% set asistenteIaClientKey = app.user is not null ? app.user.userIdentifier : (app.session is not null ? app.session.getId() : 'anonymous') %}
 <div
     id="asistente-ia-widget"
@@ -14,15 +20,15 @@
 >
     <section id="asistente-ia-panel" class="asistente-ia-panel" aria-hidden="true">
         <header class="asistente-ia-panel__header">
-            <strong>Asistente IA</strong>
-            <button id="asistente-ia-close" type="button" class="asistente-ia-panel__close" aria-label="Cerrar">
+            <strong>{{ asistenteIaWidgetLabel }}</strong>
+            <button id="asistente-ia-close" type="button" class="asistente-ia-panel__close" aria-label="{{ asistenteIaCloseLabel }}">
                 x
             </button>
         </header>
 
         <div id="asistente-ia-messages" class="asistente-ia-panel__messages">
             <article class="asistente-ia-message asistente-ia-message--assistant">
-                <p>Hola, soy tu asistente. ¿En qué te ayudo?</p>
+                <p>{{ asistenteIaGreeting }}</p>
             </article>
         </div>
 
@@ -31,10 +37,10 @@
                 id="asistente-ia-input"
                 class="asistente-ia-panel__input"
                 rows="3"
-                placeholder="Escribe tu mensaje"
+                placeholder="{{ asistenteIaInputPlaceholder }}"
                 required
             ></textarea>
-            <button id="asistente-ia-submit" class="asistente-ia-panel__submit" type="submit" aria-label="Enviar mensaje" title="Enviar mensaje">
+            <button id="asistente-ia-submit" class="asistente-ia-panel__submit" type="submit" aria-label="{{ asistenteIaSubmitLabel }}" title="{{ asistenteIaSubmitLabel }}">
                 <svg class="asistente-ia-panel__submit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M3.4 20.6 21 12 3.4 3.4 3 10l10 2-10 2z"></path>
                 </svg>

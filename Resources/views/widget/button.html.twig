@@ -1,3 +1,6 @@
+{% set asistenteIaLocale = (app.session is not null ? app.session.get('_locale', app.request.locale|default('en')) : app.request.locale|default('en'))|lower %}
+{% set asistenteIaIsEnglish = asistenteIaLocale|slice(0, 2) == 'en' %}
+{% set asistenteIaWidgetLabel = asistenteIaIsEnglish ? 'AI Assistant' : 'Asistente IA' %}
 <li class="nav-item">
     <button
         id="asistente-ia-toggle"
@@ -5,9 +8,9 @@
         type="button"
         aria-controls="asistente-ia-panel"
         aria-expanded="false"
-        title="Asistente IA"
+        title="{{ asistenteIaWidgetLabel }}"
     >
         <span class="asistente-ia-navbar-trigger__icon">AI</span>
-        <span class="visually-hidden">Asistente IA</span>
+        <span class="visually-hidden">{{ asistenteIaWidgetLabel }}</span>
     </button>
 </li>

@@ -17,11 +17,12 @@
     const bootstrapEndpoint = widget.dataset.bootstrapEndpoint || '/api/v1/asistente-ia/bootstrap';
     const feedbackEndpoint = widget.dataset.feedbackEndpoint || '/api/v1/asistente-ia/feedback';
     const vectorFormUrl = widget.dataset.vectorFormUrl || '';
-    const locale = normalizeLocale(window.locale || widget.dataset.locale || document.documentElement.lang || navigator.language || '');
+    const locale = normalizeLocale(widget.dataset.locale || window.locale || document.documentElement.lang || navigator.language || '');
     const tenant = (widget.dataset.tenant || '').trim();
     const clientKey = (widget.dataset.clientKey || '').trim();
     const toggle = document.getElementById('asistente-ia-toggle');
     const panel = document.getElementById('asistente-ia-panel');
+    const panelTitle = panel ? panel.querySelector('.asistente-ia-panel__header strong') : null;
     const closeButton = document.getElementById('asistente-ia-close');
     const form = document.getElementById('asistente-ia-form');
     const input = document.getElementById('asistente-ia-input');
@@ -53,6 +54,10 @@
             parentId: panel.parentElement ? panel.parentElement.id || null : null,
         });
     }
+
+    const ui = getUiStrings(locale);
+    applyLocalizedUi({ toggle, panelTitle, closeButton, input, submitButton, ui });
+    syncInitialGreeting(messages, ui.greeting);
 
     console.log('[AsistenteIA] widget init', {
         hasToggle: Boolean(toggle),
@@ -121,19 +126,7 @@
     };
 
     const getGreetingText = () => {
-        if (locale.startsWith('en')) {
-            return 'Hello, I am your assistant. How can I help you?';
-        }
-
-        if (locale.startsWith('fr')) {
-            return 'Bonjour, je suis votre assistant. Comment puis-je vous aider ?';
-        }
-
-        if (locale.startsWith('pt')) {
-            return 'Olá, sou seu assistente. Como posso ajudar?';
-        }
-
-        return 'Hola, soy tu asistente. ¿En qué te ayudo?';
+        return ui.greeting;
     };
 
     const renderGreeting = () => {
@@ -250,8 +243,8 @@
             feedbackBar.dataset.messageId = item.dataset.messageId;
             feedbackBar.dataset.feedbackState = feedbackState;
             feedbackBar.innerHTML = `
-                <button type="button" class="asistente-ia-message__feedback-btn" data-feedback-value="1">Fue útil</button>
-                <button type="button" class="asistente-ia-message__feedback-btn" data-feedback-value="0">No fue útil</button>
+                <button type="button" class="asistente-ia-message__feedback-btn" data-feedback-value="1">${ui.feedbackUseful}</button>
+                <button type="button" class="asistente-ia-message__feedback-btn" data-feedback-value="0">${ui.feedbackNotUseful}</button>
                 <span class="asistente-ia-message__feedback-status" aria-live="polite"></span>
             `;
 
@@ -267,9 +260,9 @@
             if (status) {
                 const helpful = typeof options.helpful === 'boolean' ? options.helpful : null;
                 if (feedbackState === 'sending') {
-                    status.textContent = options.feedbackStatus || 'Enviando...';
+                    status.textContent = options.feedbackStatus || ui.feedbackSending;
                 } else if (feedbackState === 'done') {
-                    status.textContent = options.feedbackStatus || (helpful ? 'Gracias por tu ayuda.' : 'Feedback registrado.');
+                    status.textContent = options.feedbackStatus || (helpful ? ui.feedbackThanksHelpful : ui.feedbackRecorded);
                 }
             }
 
@@ -455,7 +448,7 @@
 
         const status = feedbackBar.querySelector('.asistente-ia-message__feedback-status');
         if (status) {
-            status.textContent = helpful ? 'Gracias por tu ayuda.' : 'Gracias, lo revisaremos.';
+            status.textContent = helpful ? ui.feedbackThanksHelpful : ui.feedbackThanksReview;
         }
 
         try {
@@ -480,10 +473,10 @@
 
             const payload = await response.json().catch(() => null);
             if (!response.ok || !payload?.ok) {
-                throw new Error(payload?.error?.message || payload?.message || 'No fue posible registrar el feedback.');
+                throw new Error(payload?.error?.message || payload?.message || ui.feedbackRegisterError);
             }
 
-            const resultMessage = payload?.data?.message || payload?.message || (helpful ? 'Gracias por tu ayuda.' : 'Feedback registrado.');
+            const resultMessage = payload?.data?.message || payload?.message || (helpful ? ui.feedbackThanksHelpful : ui.feedbackRecorded);
             feedbackBar.dataset.feedbackState = 'done';
             if (messageId !== '') {
                 updatePersistedMessage(messageId, (message) => ({
@@ -505,7 +498,7 @@
                 btn.disabled = false;
             });
             if (status) {
-                status.textContent = 'No fue posible enviar el feedback.';
+                status.textContent = ui.feedbackSendError;
             }
         }
     };
@@ -513,8 +506,8 @@
     const setSendingState = (isSending) => {
         input.disabled = isSending;
         submitButton.disabled = isSending;
-        submitButton.setAttribute('aria-label', isSending ? 'Enviando mensaje' : 'Enviar mensaje');
-        submitButton.setAttribute('title', isSending ? 'Enviando...' : 'Enviar mensaje');
+        submitButton.setAttribute('aria-label', isSending ? ui.sendingMessage : ui.sendMessage);
+        submitButton.setAttribute('title', isSending ? ui.sendingMessageShort : ui.sendMessage);
         widget.classList.toggle('is-sending', isSending);
     };
 
@@ -714,12 +707,12 @@
             const payload = await response.json().catch(() => null);
 
             if (!response.ok || !payload?.ok) {
-                const errorMessage = payload?.error?.message || payload?.message || 'No fue posible consultar el asistente.';
+                const errorMessage = payload?.error?.message || payload?.message || ui.assistantError;
                 appendMessage('assistant', errorMessage);
                 return;
             }
 
-            const reply = payload?.data?.message || payload?.message || 'No hubo respuesta del asistente.';
+            const reply = payload?.data?.message || payload?.message || ui.noAssistantResponse;
             const links = Array.isArray(payload?.data?.links) ? payload.data.links : [];
 
             if (payload?.data?.conversation_id) {
@@ -734,7 +727,7 @@
             });
         } catch (error) {
             console.error('[AsistenteIA] error al consultar el asistente', error);
-            appendMessage('assistant', 'Ocurrio un error al consultar el asistente.', [], {
+            appendMessage('assistant', ui.assistantError, [], {
                 feedbackEnabled: false,
             });
         } finally {
@@ -877,4 +870,128 @@ function normalizeLocale(value) {
 
     const compact = normalized.replace('_', '-');
     return compact;
+}
+
+function getUiStrings(locale) {
+    const lang = normalizeLocale(locale);
+
+    if (lang.startsWith('en')) {
+        return {
+            widgetLabel: 'AI Assistant',
+            closeLabel: 'Close',
+            greeting: 'Hello, I am your assistant. How can I help you?',
+            inputPlaceholder: 'Type your message',
+            sendMessage: 'Send message',
+            sendingMessage: 'Sending message',
+            sendingMessageShort: 'Sending...',
+            feedbackUseful: 'Helpful',
+            feedbackNotUseful: 'Not helpful',
+            feedbackSending: 'Sending...',
+            feedbackThanksHelpful: 'Thanks for your help.',
+            feedbackThanksReview: 'Thanks, we will review it.',
+            feedbackRecorded: 'Feedback recorded.',
+            feedbackRegisterError: 'Could not register feedback.',
+            feedbackSendError: 'Could not send feedback.',
+            assistantError: 'There was an error while contacting the assistant.',
+            noAssistantResponse: 'No assistant response was returned.',
+        };
+    }
+
+    if (lang.startsWith('fr')) {
+        return {
+            widgetLabel: 'Assistant IA',
+            closeLabel: 'Fermer',
+            greeting: 'Bonjour, je suis votre assistant. Comment puis-je vous aider ?',
+            inputPlaceholder: 'Saisissez votre message',
+            sendMessage: 'Envoyer le message',
+            sendingMessage: 'Envoi du message',
+            sendingMessageShort: 'Envoi...',
+            feedbackUseful: 'Utile',
+            feedbackNotUseful: 'Pas utile',
+            feedbackSending: 'Envoi...',
+            feedbackThanksHelpful: 'Merci pour votre aide.',
+            feedbackThanksReview: 'Merci, nous allons l’examiner.',
+            feedbackRecorded: 'Retour enregistré.',
+            feedbackRegisterError: 'Impossible d’enregistrer le retour.',
+            feedbackSendError: 'Impossible d’envoyer le retour.',
+            assistantError: 'Une erreur est survenue lors de la consultation de l’assistant.',
+            noAssistantResponse: 'Aucune réponse de l’assistant.',
+        };
+    }
+
+    if (lang.startsWith('pt')) {
+        return {
+            widgetLabel: 'Assistente IA',
+            closeLabel: 'Fechar',
+            greeting: 'Olá, sou seu assistente. Como posso ajudar?',
+            inputPlaceholder: 'Digite sua mensagem',
+            sendMessage: 'Enviar mensagem',
+            sendingMessage: 'Enviando mensagem',
+            sendingMessageShort: 'Enviando...',
+            feedbackUseful: 'Útil',
+            feedbackNotUseful: 'Não útil',
+            feedbackSending: 'Enviando...',
+            feedbackThanksHelpful: 'Obrigado pela sua ajuda.',
+            feedbackThanksReview: 'Obrigado, vamos revisar.',
+            feedbackRecorded: 'Feedback registrado.',
+            feedbackRegisterError: 'Não foi possível registrar o feedback.',
+            feedbackSendError: 'Não foi possível enviar o feedback.',
+            assistantError: 'Ocorreu um erro ao consultar o assistente.',
+            noAssistantResponse: 'Nenhuma resposta do assistente foi retornada.',
+        };
+    }
+
+    return {
+        widgetLabel: 'Asistente IA',
+        closeLabel: 'Cerrar',
+        greeting: 'Hola, soy tu asistente. ¿En qué te ayudo?',
+        inputPlaceholder: 'Escribe tu mensaje',
+        sendMessage: 'Enviar mensaje',
+        sendingMessage: 'Enviando mensaje',
+        sendingMessageShort: 'Enviando...',
+        feedbackUseful: 'Fue útil',
+        feedbackNotUseful: 'No fue útil',
+        feedbackSending: 'Enviando...',
+        feedbackThanksHelpful: 'Gracias por tu ayuda.',
+        feedbackThanksReview: 'Gracias, lo revisaremos.',
+        feedbackRecorded: 'Feedback registrado.',
+        feedbackRegisterError: 'No fue posible registrar el feedback.',
+        feedbackSendError: 'No fue posible enviar el feedback.',
+        assistantError: 'Ocurrio un error al consultar el asistente.',
+        noAssistantResponse: 'No hubo respuesta del asistente.',
+    };
+}
+
+function applyLocalizedUi({ toggle, panelTitle, closeButton, input, submitButton, ui }) {
+    if (toggle) {
+        const labelNode = toggle.querySelector('.asistente-ia-toggle__label, .visually-hidden');
+        if (labelNode) {
+            labelNode.textContent = ui.widgetLabel;
+        }
+        toggle.setAttribute('title', ui.widgetLabel);
+    }
+
+    if (panelTitle) {
+        panelTitle.textContent = ui.widgetLabel;
+    }
+
+    if (closeButton) {
+        closeButton.setAttribute('aria-label', ui.closeLabel);
+    }
+
+    if (input) {
+        input.setAttribute('placeholder', ui.inputPlaceholder);
+    }
+
+    if (submitButton) {
+        submitButton.setAttribute('aria-label', ui.sendMessage);
+        submitButton.setAttribute('title', ui.sendMessage);
+    }
+}
+
+function syncInitialGreeting(messages, greeting) {
+    const firstAssistantGreeting = messages ? messages.querySelector('.asistente-ia-message--assistant p') : null;
+    if (firstAssistantGreeting && firstAssistantGreeting.textContent.trim() !== '') {
+        firstAssistantGreeting.textContent = greeting;
+    }
 }

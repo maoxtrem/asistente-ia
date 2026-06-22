@@ -11,7 +11,7 @@
     --ai-panel-border: rgba(255, 255, 255, 0.12);
     --ai-text: #e6eefc;
     --ai-text-on-accent: #2b2300;
-    --ai-assistant-bubble-bg: rgba(255, 255, 255, 0.94);
+    --ai-assistant-bubble-bg: linear-gradient(135deg, rgba(255, 248, 220, 0.98), rgba(255, 236, 179, 0.96));
     --ai-user-bubble-bg: var(--ai-accent);
     --ai-input-bg: rgba(255, 255, 255, 0.96);
     --ai-link-bg: rgba(255, 255, 255, 0.12);
@@ -133,9 +133,9 @@
 }
 
 .asistente-ia-message--assistant p {
-    background: #ffffff;
+    background: var(--ai-assistant-bubble-bg);
     color: #111827;
-    border: 1px solid rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(255, 191, 0, 0.22);
 }
 
 .asistente-ia-message__links {
@@ -449,9 +449,10 @@
 }
 
 #asistente-ia-panel .asistente-ia-message--assistant p {
-    background: #ffffff !important;
+    background: linear-gradient(135deg, rgba(255, 248, 220, 0.98), rgba(255, 236, 179, 0.96)) !important;
     color: #111827 !important;
     text-shadow: none !important;
+    border-color: rgba(255, 191, 0, 0.22) !important;
 }
 
 #asistente-ia-panel .asistente-ia-panel__input {
